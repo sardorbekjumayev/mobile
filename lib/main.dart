@@ -1,122 +1,69 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+import 'app/config.dart';
+import 'app/stepix_app.dart';
+import 'core/api/api_client.dart';
+import 'core/session/session_controller.dart';
+import 'core/session/settings_controller.dart';
+import 'core/storage/token_store.dart';
+import 'data/repositories/auth_repository.dart';
+import 'data/repositories/profile_repository.dart';
+import 'data/repositories/student_repository.dart';
+import 'data/repositories/teacher_repository.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Month names in three languages — `DateFormat('d MMM')` throws without them
+  // for anything but `en`.
+  await initializeDateFormatting();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
+  final config = ApiConfig(
+    baseUrl: AppConfig.baseUrl,
+    appVersion: AppConfig.appVersion,
+    platform: AppConfig.platform,
+  );
+  final tokens = SecureTokenStore();
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  // The session is built before the client so the client can hand it a rejected
+  // refresh token; the client is built before the session's repository, so the
+  // wiring is closed with a setter rather than a constructor argument.
+  late final SessionController session;
+  final api = DioApiClient(
+    config: config,
+    tokenStore: tokens,
+    onSessionExpired: () => session.expire(),
+  );
+  final profiles = ProfileRepository(api);
+  session = SessionController(
+    auth: AuthRepository(api),
+    tokens: tokens,
+    config: config,
+  );
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  // Asks `/auth/me` who the stored tokens belong to before the first frame that
+  // could show a home screen — a cached role is exactly how a suspension fails
+  // to take effect.
+  unawaited(session.restore());
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<ApiConfig>.value(value: config),
+        Provider<TokenStore>.value(value: tokens),
+        Provider<ApiClient>.value(value: api),
+        Provider(create: (_) => StudentRepository(api)),
+        Provider(create: (_) => TeacherRepository(api)),
+        Provider<ProfileRepository>.value(value: profiles),
+        ChangeNotifierProvider<SessionController>.value(value: session),
+        ChangeNotifierProvider(create: (_) => SettingsController(profiles)),
+      ],
+      child: const StepixApp(),
+    ),
+  );
 }
