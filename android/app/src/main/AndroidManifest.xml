@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Reliz build faqat shu faylni o'qiydi: INTERNET ruxsati debug/profile
-         manifestlarida turgani uchun `flutter run` ishlagan, ammo `--release`
+         manifestlarida turgani uchun `flutter run` ishlagan, ammo reliz
          APK'da hech qanday so'rov chiqmagan va ilova buni "internet yo'q" deb
          ko'rsatgan. Ruxsat shu yerda turishi shart. -->
     <uses-permission android:name="android.permission.INTERNET"/>

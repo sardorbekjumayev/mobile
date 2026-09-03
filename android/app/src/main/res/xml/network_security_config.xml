@@ -4,7 +4,7 @@
 
   Asosiy qoida: butun ilova faqat HTTPS bilan gaplashadi. `cleartextTrafficPermitted="false"`
   bo'lmasa Android 8 va undan pastda oddiy HTTP jimgina o'tib ketadi, ya'ni bitta noto'g'ri
-  `--dart-define` butun trafikni ochiq qoldiradi va buni hech kim sezmaydi.
+  `dart-define` butun trafikni ochiq qoldiradi va buni hech kim sezmaydi.
 
   Istisno — faqat ishlab chiqish xostlari: emulyatorning host mashinasi (10.0.2.2) va
   localhost. Ular internetda mavjud emas, shuning uchun relizga ta'sir qilmaydi.
