@@ -110,12 +110,21 @@ class DioApiClient implements ApiClient {
     return headers;
   }
 
+  /// The two endpoints that must never trigger a token refresh.
+  ///
+  /// `/auth/login` answers `401` for a wrong password, and `/auth/refresh`
+  /// answers `401` for a rejected refresh token. Refreshing in response to
+  /// either is at best a wasted round trip and at worst an infinite loop.
+  static bool _isAuthEndpoint(String path) =>
+      path.endsWith('/auth/login') || path.endsWith('/auth/refresh');
+
   Future<dynamic> _send(
     String method,
     String path, {
     Object? body,
     Map<String, dynamic>? query,
     bool allowRetry = true,
+    bool allowNetworkRetry = true,
   }) async {
     final Response<dynamic> response;
     try {
@@ -126,6 +135,21 @@ class DioApiClient implements ApiClient {
         options: Options(method: method, headers: await _headers()),
       );
     } on DioException catch (e) {
+      // A phone handing the radio back from Wi-Fi to LTE drops exactly one
+      // connection. Retrying it once turns a visible "internet aloqasi yo'q"
+      // into a request the user never noticed — but only where a repeat is
+      // harmless: a re-sent POST could submit a test twice.
+      if (allowNetworkRetry && _isTransient(e) && _isIdempotent(method)) {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        return _send(
+          method,
+          path,
+          body: body,
+          query: query,
+          allowRetry: allowRetry,
+          allowNetworkRetry: false,
+        );
+      }
       throw ApiException.network(_networkMessage(e));
     }
 
@@ -135,9 +159,11 @@ class DioApiClient implements ApiClient {
 
     final failure = envelope.toException(httpStatus: response.statusCode ?? envelope.statusCode);
 
-    // One retry, and only for a genuinely expired access token. A block or a
-    // suspension is a 403 and must never trigger a refresh loop.
-    if (failure.isUnauthenticated && allowRetry) {
+    // One retry, and only for a genuinely expired access token. A wrong
+    // password, a blocked user and a suspended center all arrive as 401/403
+    // too, and none of them is fixed by a new token — see
+    // [ApiException.isUnauthenticated].
+    if (failure.isUnauthenticated && allowRetry && !_isAuthEndpoint(path)) {
       final refreshed = await _refresh();
       if (refreshed != null) {
         return _send(method, path, body: body, query: query, allowRetry: false);
@@ -147,6 +173,15 @@ class DioApiClient implements ApiClient {
 
     throw failure;
   }
+
+  /// Failures where the request never reached the server, so repeating it
+  /// cannot duplicate anything server-side.
+  static bool _isTransient(DioException e) =>
+      e.type == DioExceptionType.connectionError ||
+      e.type == DioExceptionType.connectionTimeout ||
+      e.type == DioExceptionType.receiveTimeout;
+
+  static bool _isIdempotent(String method) => method == 'GET' || method == 'DELETE';
 
   Envelope _envelopeOf(Response<dynamic> response) {
     final data = response.data;
@@ -212,6 +247,9 @@ class DioApiClient implements ApiClient {
         return 'Internet aloqasi yo\'q.';
       case DioExceptionType.cancel:
         return 'So\'rov bekor qilindi.';
+      case DioExceptionType.badCertificate:
+        // Almost always a proxy or a phone whose clock is wrong, not the API.
+        return 'Xavfsiz ulanish o\'rnatilmadi. Telefon sanasi va vaqtini tekshiring.';
       default:
         return 'Tarmoq xatosi. Qayta urining.';
     }

@@ -35,8 +35,12 @@ class _StepixAppState extends State<StepixApp> {
     // Built once: a GoRouter rebuilt on every frame would drop the navigation
     // stack under the user's feet.
     _router = createRouter(session: _session, settings: _settings);
+    // `GET /settings` is public, so the force-update gate can be read before
+    // anyone signs in. Waiting for a session meant a build too old to talk to
+    // the API showed a login form instead of the update screen — and the login
+    // was the request that would fail.
+    _settings.ensureLoaded();
     _session.addListener(_onSession);
-    _onSession();
   }
 
   @override
@@ -46,8 +50,9 @@ class _StepixAppState extends State<StepixApp> {
     super.dispose();
   }
 
-  /// `GET /settings` sits behind auth, so the force-update flag can only be
-  /// read once there is a session to read it with.
+  /// A retry for the boot-time read: the first attempt runs before there is a
+  /// connection to speak of, and [SettingsController.ensureLoaded] is a no-op
+  /// once the answer is in.
   void _onSession() {
     if (_session.isAuthenticated) _settings.ensureLoaded();
   }

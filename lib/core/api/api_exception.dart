@@ -15,6 +15,33 @@ class ErrorCodes {
   /// with a fresh token will not help.
   static const userBlocked = 20106;
 
+  /// No bearer token, or one the server will not accept. The only 401 a token
+  /// refresh can actually fix, alongside [tokenExpired].
+  static const unauthorized = 10002;
+
+  /// The access token's lifetime ran out. Refreshable.
+  static const tokenExpired = 20104;
+
+  /// A refresh token that is not in the allowlist. Presented twice means stolen
+  /// once, so the server revokes the whole family — this session is over and no
+  /// second refresh will bring it back.
+  static const refreshInvalid = 20103;
+
+  /// A center admin or super admin signing into the student/teacher app. Also a
+  /// `401`, and also unfixable by a refresh: the account simply does not belong
+  /// to this app.
+  static const wrongRoleForApp = 20110;
+
+  /// `must_change_password` is still true. A `403` — the session is valid, the
+  /// user is just standing in front of one screen.
+  static const passwordChangeRequired = 20107;
+
+  /// New password fails the strength rule.
+  static const passwordWeak = 20108;
+
+  /// New password is the old one.
+  static const passwordSame = 20109;
+
   /// The center is suspended. Not the user's fault; the client says
   /// "contact your learning center" rather than showing a login error.
   static const centerSuspended = 20203;
@@ -44,12 +71,35 @@ class ApiException implements Exception {
   final int code;
   final String? path;
 
-  /// True when the session is over and the user must sign in again.
+  /// True only for a 401 a **token refresh could actually fix**.
+  ///
+  /// The API answers `401` for four different things, and only two of them are
+  /// about the token:
+  ///
+  /// * `10002` / `20104` — missing or expired access token. Refreshable.
+  /// * `20105` — wrong phone or password. There is no session yet; refreshing
+  ///   is meaningless and calling `onSessionExpired` on a failed login wiped
+  ///   the session of a user who was merely mistyping their password.
+  /// * `20110` — the account belongs to a panel, not to this app. A new token
+  ///   would be refused for exactly the same reason.
   ///
   /// A `403` with [ErrorCodes.userBlocked] or [ErrorCodes.centerSuspended] is
-  /// explicitly *not* this: treating those as an expired token logs the user
+  /// also explicitly not this: treating those as an expired token logs the user
   /// out in a loop against a wall they cannot climb.
-  bool get isUnauthenticated => statusCode == 401 && !isBlocked && !isCenterSuspended;
+  bool get isUnauthenticated =>
+      statusCode == 401 &&
+      !isWrongCredentials &&
+      !isWrongRoleForApp &&
+      !isBlocked &&
+      !isCenterSuspended;
+
+  /// The session is unrecoverable — the refresh token itself was rejected.
+  bool get isRefreshRejected => code == ErrorCodes.refreshInvalid;
+
+  bool get isWrongRoleForApp => code == ErrorCodes.wrongRoleForApp;
+
+  /// Blocked user or suspended center: a wall, not a login error.
+  bool get isLockedOut => isBlocked || isCenterSuspended;
 
   bool get isBlocked => code == ErrorCodes.userBlocked;
 

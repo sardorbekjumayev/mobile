@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:stepix/app/stepix_app.dart';
 import 'package:stepix/core/api/api_client.dart';
+import 'package:stepix/core/api/api_exception.dart';
 import 'package:stepix/core/session/session_controller.dart';
 import 'package:stepix/core/session/settings_controller.dart';
 import 'package:stepix/core/storage/token_store.dart';
@@ -55,6 +57,28 @@ void main() {
 
     expect(find.textContaining('Tezroq'), findsOneWidget);
     expect(find.textContaining('Raqam bilan'), findsOneWidget);
+  });
+
+  testWidgets('a signed-in device with no connection waits, with a retry', (tester) async {
+    final api = FakeApiClient({
+      'GET /auth/me': ApiException.network('Internet aloqasi yo\'q.'),
+      'GET /settings': settingsJson,
+    });
+
+    await pumpApp(tester, api: api, tokens: signedInTokens);
+
+    // Not the welcome screen: its only button posts to the same dead API.
+    expect(find.textContaining('Raqam bilan'), findsNothing);
+    expect(find.text('Ulanish yo\'q'), findsOneWidget);
+    expect(find.byKey(const Key('splash-retry')), findsOneWidget);
+
+    api.responses['GET /auth/me'] = identityJson();
+    api.responses['GET /home'] = {'greeting': 'day', 'empty_state': 'no_group'};
+    api.responses['GET /group'] = const [];
+    await tester.tap(find.byKey(const Key('splash-retry')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ali'), findsOneWidget);
   });
 
   testWidgets('a stored session restores straight into the student shell', (tester) async {

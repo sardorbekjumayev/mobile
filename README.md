@@ -8,17 +8,38 @@ ekranlar to'plami ko'rsatiladi.
 
 ```sh
 flutter pub get
-flutter run --dart-define=STEPIX_API_BASE_URL=http://10.0.2.2:3003/v1
+flutter run
+flutter build apk --release
 ```
 
-`STEPIX_API_BASE_URL` berilmasa, Android emulyatorda `http://10.0.2.2:3003/v1`,
-qolgan platformalarda `http://localhost:3003/v1` ishlatiladi — ya'ni shu
-kompyuterda turgan Mobile API (`backend`, `MOBILE_PORT=3003`).
+`STEPIX_API_BASE_URL` berilmasa **`https://api.169-58-198-20.sslip.io/v1`**
+ishlatiladi — nginx orqasidagi Mobile API (`backend`, `MOBILE_PORT=3003`,
+TLS Let's Encrypt). Ya'ni telefon hech qanday sozlamasiz ishlaydi.
+
+Kompyuterdagi backendga qarab ishlash uchun manzilni ochiq berish kerak:
+
+```sh
+flutter run --dart-define=STEPIX_API_BASE_URL=http://10.0.2.2:3003/v1      # emulyator
+flutter run --dart-define=STEPIX_API_BASE_URL=http://192.168.1.50:3003/v1  # LAN telefon
+```
+
+LAN IP uchun `android/app/src/main/res/xml/network_security_config.xml`
+ichiga o'sha IP'ni `<domain>` qilib qo'shing: ilova sukut bo'yicha faqat
+HTTPS bilan gaplashadi, istisno faqat `10.0.2.2` va `localhost` uchun.
 
 | dart-define | Nima uchun |
 |---|---|
-| `STEPIX_API_BASE_URL` | API manzili. Relizda `https://api.stepix.uz/v1` |
-| `STEPIX_APP_VERSION` | `X-App-Version` sarlavhasi. Server shu asosda `force_update` qaytaradi |
+| `STEPIX_API_BASE_URL` | API manzili. Sukut bo'yicha `https://api.169-58-198-20.sslip.io/v1` |
+| `STEPIX_APP_VERSION` | `X-App-Version` va `GET /settings?version=`. Server shu asosda `force_update` qaytaradi |
+
+### Tarmoq bo'yicha nima qayerda
+
+* `android/app/src/main/AndroidManifest.xml` — `INTERNET` ruxsati. Reliz build
+  faqat shu faylni o'qiydi; ruxsat debug manifestda turganida `--release` APK
+  hech qayerga so'rov yubora olmasdi.
+* `android/app/src/main/res/xml/network_security_config.xml` — ochiq HTTP
+  taqiqlangan, istisno faqat emulyator xostlari.
+* `ios/Runner/Info.plist` — ATS o'z holicha; faqat `NSAllowsLocalNetworking`.
 
 Tekshirish:
 

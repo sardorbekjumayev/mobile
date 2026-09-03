@@ -54,8 +54,13 @@ GoRouter createRouter({
     redirect: (context, state) {
       final path = state.matchedLocation;
 
-      // 1 · Before `/auth/me` has answered there is nothing to decide.
-      if (session.status == SessionStatus.unknown) {
+      // 1 · Before `/auth/me` has answered there is nothing to decide — and
+      //     `offline` means it has not answered *yet*, with tokens still on the
+      //     device. Both wait on the splash, which grows a retry button in the
+      //     second case rather than sending a signed-in user to a login form
+      //     that would fail on the same dead connection.
+      if (session.status == SessionStatus.unknown ||
+          session.status == SessionStatus.offline) {
         return path == '/splash' ? null : '/splash';
       }
 

@@ -184,6 +184,7 @@ class S {
 
   // Shared
   String get retry => _t('retry');
+  String get offlineTitle => _t('offline_title');
   String get somethingWentWrong => _t('something_went_wrong');
   String get loading => _t('loading');
   String get student => _t('student_role');
@@ -346,6 +347,7 @@ class S {
       'subscription_grace': 'To\'lov muddati o\'tdi. Imkoniyatlar hozircha ochiq.',
       'pay': 'To\'lash',
       'retry': 'Qayta urinish',
+      'offline_title': 'Ulanish yo\'q',
       'something_went_wrong': 'Xatolik yuz berdi',
       'loading': 'Yuklanmoqda…',
       'student_role': 'O\'quvchi',
@@ -507,6 +509,7 @@ class S {
       'subscription_grace': 'Срок оплаты прошёл. Доступ пока открыт.',
       'pay': 'Оплатить',
       'retry': 'Повторить',
+      'offline_title': 'Нет соединения',
       'something_went_wrong': 'Что-то пошло не так',
       'loading': 'Загрузка…',
       'student_role': 'Ученик',
@@ -668,6 +671,7 @@ class S {
       'subscription_grace': 'Payment is past due. Access stays open for now.',
       'pay': 'Pay',
       'retry': 'Retry',
+      'offline_title': 'No connection',
       'something_went_wrong': 'Something went wrong',
       'loading': 'Loading…',
       'student_role': 'Student',
