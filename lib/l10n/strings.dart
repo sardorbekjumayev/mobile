@@ -34,6 +34,7 @@ class S {
   String get passwordBody => _t('password_body');
   String get passwordField => _t('password_field');
   String get signIn => _t('sign_in');
+  String get loginAdminHint => _t('login_admin_hint');
   String get successTitle => _t('success_title');
   String get successBody => _t('success_body');
   String get openStepix => _t('open_stepix');
@@ -210,13 +211,14 @@ class S {
       'welcome_cta': 'Raqam bilan kirish',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
-      'phone_hint': 'Ro\'yxatdan o\'tish yo\'q',
-      'phone_hint_text': 'Hisobingizni o\'quv markazingiz ochadi.',
+      'phone_hint': 'Hisobni o\'quv markaz ochadi',
+      'phone_hint_text': 'Ilovada ro\'yxatdan o\'tish yo\'q — raqam va parolni o\'quv markazingiz beradi.',
       'continue': 'Davom etish',
       'password_title': 'Parolni kiriting',
       'password_body': 'Parolni o\'quv markazingiz raqam bilan birga bergan',
       'password_field': 'Parolingiz',
       'sign_in': 'Kirish',
+      'login_admin_hint': 'Markaz administratorimisiz? Bu ilova o\'quvchi va o\'qituvchilar uchun — administrator brauzerdagi panelga kiradi.',
       'success_title': 'Xush kelibsiz!',
       'success_body': 'Hammasi tayyor. Birinchi testni boshlaymizmi?',
       'open_stepix': 'Stepix\'ni ochish',
@@ -372,13 +374,14 @@ class S {
       'welcome_cta': 'Войти по номеру',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
-      'phone_hint': 'Регистрации нет',
-      'phone_hint_text': 'Аккаунт создаёт ваш учебный центр.',
+      'phone_hint': 'Аккаунт создаёт центр',
+      'phone_hint_text': 'Регистрации в приложении нет — номер и пароль выдаёт ваш учебный центр.',
       'continue': 'Продолжить',
       'password_title': 'Введите пароль',
       'password_body': 'Пароль выдал ваш учебный центр вместе с номером',
       'password_field': 'Ваш пароль',
       'sign_in': 'Войти',
+      'login_admin_hint': 'Вы администратор центра? Это приложение — для учеников и преподавателей; администратор входит в панель в браузере.',
       'success_title': 'Добро пожаловать!',
       'success_body': 'Всё готово. Начнём с первого теста?',
       'open_stepix': 'Открыть Stepix',
@@ -534,13 +537,14 @@ class S {
       'welcome_cta': 'Sign in with your number',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
-      'phone_hint': 'No sign-up',
-      'phone_hint_text': 'Your learning center creates the account.',
+      'phone_hint': 'Your center creates the account',
+      'phone_hint_text': 'There is no sign-up in the app — your learning center issues the number and the password.',
       'continue': 'Continue',
       'password_title': 'Enter your password',
       'password_body': 'Your learning center issued it together with the number',
       'password_field': 'Your password',
       'sign_in': 'Sign in',
+      'login_admin_hint': 'Are you a center admin? This app is for students and teachers — admins sign in to the panel in a browser.',
       'success_title': 'Welcome!',
       'success_body': 'You are all set. Shall we start with the first test?',
       'open_stepix': 'Open Stepix',

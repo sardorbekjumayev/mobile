@@ -31,6 +31,16 @@ class _PasswordScreenState extends State<PasswordScreen> {
   bool _canSubmit = false;
   String? _error;
 
+  /// Shown under the error for `20105` only.
+  ///
+  /// A center admin signing in here gets exactly the same "wrong phone or
+  /// password" as a student with a typo — deliberately, because naming the role
+  /// would turn the form into a directory of which numbers are admins. The cost
+  /// is that an admin has no way to tell they are simply in the wrong app, so
+  /// the hint is shown to *everyone* who gets that error: it says nothing about
+  /// the number that was typed.
+  bool _showAdminHint = false;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -42,6 +52,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _showAdminHint = false;
     });
 
     final session = context.read<SessionController>();
@@ -55,7 +66,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
           : '/login/success');
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.message);
+      setState(() {
+        _error = e.message;
+        _showAdminHint = e.isWrongCredentials;
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = S.of(context).somethingWentWrong);
@@ -160,6 +174,14 @@ class _PasswordScreenState extends State<PasswordScreen> {
                   _error!,
                   key: const Key('login-error'),
                   style: const TextStyle(fontSize: 12.5, color: AppColors.clay, height: 1.45),
+                ),
+              ],
+              if (_showAdminHint) ...[
+                const SizedBox(height: 10),
+                Text(
+                  s.loginAdminHint,
+                  key: const Key('login-admin-hint'),
+                  style: const TextStyle(fontSize: 12, color: AppColors.muted, height: 1.5),
                 ),
               ],
               const Spacer(),
