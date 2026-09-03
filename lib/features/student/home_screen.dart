@@ -93,13 +93,32 @@ class _NextTestCard extends StatelessWidget {
     final next = test;
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: brand.gradient,
         borderRadius: const BorderRadius.all(Radius.circular(30)),
         boxShadow: AppShapes.buttonShadow(brand.primary),
       ),
-      child: Column(
+      child: Stack(
+        children: [
+          // The template's soft highlight, clipped by the card's own corner
+          // radius. Without it the hero is a flat rectangle of brand colour and
+          // reads as a banner rather than as a card with light on it.
+          Positioned(
+            top: -76,
+            right: -26,
+            child: Container(
+              width: 190,
+              height: 190,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: AppShapes.splashOf(190),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -135,8 +154,14 @@ class _NextTestCard extends StatelessWidget {
           if (next != null) ...[
             const SizedBox(height: 6),
             Text(
-              '${next.groupName} · ${next.questionCount} ${s.questions} · '
-              '${next.timeLimitMin} ${s.minutes}',
+              // Joined from the parts that exist. Interpolating the group name
+              // straight in left a stray "· " at the front of the line for
+              // every test whose group the endpoint did not name.
+              [
+                if (next.groupName.isNotEmpty) next.groupName,
+                '${next.questionCount} ${s.questions}',
+                '${next.timeLimitMin} ${s.minutes}',
+              ].join(' · '),
               style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.86)),
             ),
             const SizedBox(height: 16),
@@ -160,6 +185,9 @@ class _NextTestCard extends StatelessWidget {
               ),
             ),
           ],
+              ],
+            ),
+          ),
         ],
       ),
     );
