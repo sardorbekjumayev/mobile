@@ -27,3 +27,25 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Bundled rather than fetched. `AppFonts` has always named these two families
+  # — they are the template's — but nothing declared them, so every device fell
+  # through to the fallback and the app rendered in Roboto and Georgia. A design
+  # that depends on its typography has to ship it.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Newsreader-Medium.ttf
+          weight: 500
