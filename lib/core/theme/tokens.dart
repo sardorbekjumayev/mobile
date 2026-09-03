@@ -69,12 +69,19 @@ class AppShapes {
   );
 
   /// `border-radius:44% 56% 52% 48%` — the welcome/profile splash shape.
-  static const splash = BorderRadius.only(
-    topLeft: Radius.circular(38),
-    topRight: Radius.circular(42),
-    bottomRight: Radius.circular(40),
-    bottomLeft: Radius.circular(36),
-  );
+  ///
+  /// CSS percentages are of the box, so the shape only reads as a blob at the
+  /// size it is drawn. The old fixed 36–42px radii were roughly a quarter of the
+  /// 150px hero and produced a rounded square instead: [splashOf] scales them.
+  static BorderRadius splashOf(double size) => BorderRadius.only(
+        topLeft: Radius.circular(size * 0.44),
+        topRight: Radius.circular(size * 0.56),
+        bottomRight: Radius.circular(size * 0.52),
+        bottomLeft: Radius.circular(size * 0.48),
+      );
+
+  /// The 110px splash-screen mark, precomputed so it stays `const`-friendly.
+  static final splash = splashOf(110);
 
   static const List<BoxShadow> shadow1 = [
     BoxShadow(color: Color(0x0D12263C), blurRadius: 2, offset: Offset(0, 1)),
@@ -92,9 +99,11 @@ class AppShapes {
 
 /// Fonts: `Newsreader` for display, `Figtree` for everything else.
 ///
-/// Neither font file ships with the app — the families fall back to the
-/// platform's serif and sans stacks, which keeps the APK small and the text
-/// legible on a device that has neither.
+/// Both ship inside the app (`assets/fonts`, declared in `pubspec.yaml`). They
+/// used to be named here and bundled nowhere, so every device silently fell
+/// through to the fallbacks below and the app rendered in Georgia and Roboto —
+/// the single biggest reason it did not look like the template. The fallbacks
+/// remain for the frame or two before the asset is resolved.
 class AppFonts {
   const AppFonts._();
 

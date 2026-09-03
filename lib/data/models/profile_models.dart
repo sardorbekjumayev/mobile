@@ -92,6 +92,7 @@ class AppSettings {
     this.supportTelegram,
     this.offerPdfUrl,
     this.privacyPdfUrl,
+    this.stats,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -101,6 +102,7 @@ class AppSettings {
         supportTelegram: asStringOrNull(j['support_telegram']),
         offerPdfUrl: asStringOrNull(j['offer_pdf_url']),
         privacyPdfUrl: asStringOrNull(j['privacy_pdf_url']),
+        stats: j['stats'] == null ? null : PlatformStats.fromJson(asMap(j['stats'])),
       );
 
   final String minSupportedVersion;
@@ -109,6 +111,33 @@ class AppSettings {
   final String? supportTelegram;
   final String? offerPdfUrl;
   final String? privacyPdfUrl;
+
+  /// Null on an older server, and on any build where `/settings` has not
+  /// answered yet. The welcome screen hides the row rather than showing zeroes.
+  final PlatformStats? stats;
+}
+
+/// The three counts under the welcome headline.
+///
+/// Real numbers from `public_platform_stats()`, not decoration: a welcome
+/// screen with three plausible round figures on it is a claim the first center
+/// to sign up can check.
+class PlatformStats {
+  const PlatformStats({required this.students, required this.tests, required this.centers});
+
+  factory PlatformStats.fromJson(Map<String, dynamic> j) => PlatformStats(
+        students: asInt(j['students']),
+        tests: asInt(j['tests']),
+        centers: asInt(j['centers']),
+      );
+
+  final int students;
+  final int tests;
+  final int centers;
+
+  /// A brand-new deployment has nothing to boast about, and "0 · 0 · 0" is
+  /// worse than no row at all.
+  bool get isEmpty => students == 0 && tests == 0 && centers == 0;
 }
 
 /// `GET /subscription` — Model B centers only.

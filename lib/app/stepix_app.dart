@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../core/session/session_controller.dart';
 import '../core/session/settings_controller.dart';
+import '../core/theme/ambient_background.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/strings.dart';
 import 'router.dart';
@@ -82,9 +83,11 @@ class _StepixAppState extends State<StepixApp> {
       ],
       // Uzbek and Russian both run long; a phone set to 200% text scale should
       // wrap, not clip the design's cards to unreadable stubs.
-      builder: (context, child) => MediaQuery.withClampedTextScaling(
-        maxScaleFactor: 1.4,
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => AmbientBackground(
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.4,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }

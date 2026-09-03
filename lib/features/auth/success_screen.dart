@@ -31,7 +31,7 @@ class SuccessScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: brand.gradient,
-                  borderRadius: AppShapes.splash,
+                  borderRadius: AppShapes.splashOf(120),
                   boxShadow: AppShapes.buttonShadow(brand.primary),
                 ),
                 child: const Icon(Icons.check_rounded, size: 52, color: Colors.white),

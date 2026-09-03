@@ -251,7 +251,7 @@ class _IdentityCard extends StatelessWidget {
                       colors: [AppColors.violet, AppColors.violetDark],
                     )
                   : brand.gradient,
-              borderRadius: AppShapes.splash,
+              borderRadius: AppShapes.splashOf(78),
               boxShadow: AppShapes.buttonShadow(teacher ? AppColors.violet : brand.primary),
             ),
             child: Text(

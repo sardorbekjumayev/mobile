@@ -28,7 +28,11 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: AppColors.bg,
+      // Transparent so [AmbientBackground], mounted once in `MaterialApp.builder`,
+      // shows through every screen including pushed detail routes. Painting the
+      // background per screen instead means forty chances for one of them to be
+      // the flat colour.
+      scaffoldBackgroundColor: Colors.transparent,
       fontFamily: AppFonts.body,
       fontFamilyFallback: AppFonts.bodyFallback,
       splashFactory: NoSplash.splashFactory,

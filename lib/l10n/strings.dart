@@ -25,6 +25,9 @@ class S {
   String get welcomeTitle => _t('welcome_title');
   String get welcomeBody => _t('welcome_body');
   String get welcomeCta => _t('welcome_cta');
+  String get statStudents => _t('stat_students');
+  String get statTests => _t('stat_tests');
+  String get statCenters => _t('stat_centers');
   String get phoneTitle => _t('phone_title');
   String get phoneBody => _t('phone_body');
   String get phoneHint => _t('phone_hint');
@@ -220,6 +223,9 @@ class S {
       'welcome_title': 'Tezroq o\'rgan.\nJiddiyroq o\'yna.',
       'welcome_body': 'AI tuzgan testlar, seriyalar, reyting va har kuni ko\'rinadigan natija.',
       'welcome_cta': 'Raqam bilan kirish',
+      'stat_students': 'o\'quvchi',
+      'stat_tests': 'test',
+      'stat_centers': 'markaz',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
       'phone_hint': 'Hisobni o\'quv markaz ochadi',
@@ -394,6 +400,9 @@ class S {
       'welcome_title': 'Учись быстрее.\nИграй серьёзнее.',
       'welcome_body': 'Тесты от ИИ, серии, рейтинги и прогресс, который видно каждый день.',
       'welcome_cta': 'Войти по номеру',
+      'stat_students': 'учеников',
+      'stat_tests': 'тестов',
+      'stat_centers': 'центров',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
       'phone_hint': 'Аккаунт создаёт центр',
@@ -568,6 +577,9 @@ class S {
       'welcome_title': 'Learn faster.\nPlay harder.',
       'welcome_body': 'AI-built tests, streaks, rankings and progress you can see every day.',
       'welcome_cta': 'Sign in with your number',
+      'stat_students': 'students',
+      'stat_tests': 'tests',
+      'stat_centers': 'centers',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
       'phone_hint': 'Your center creates the account',
