@@ -35,16 +35,33 @@ class AppShell extends StatelessWidget {
     final brand = context.brand;
 
     return Scaffold(
+      // Deliberately *not* `extendBody`. A floating bar over the content looks
+      // better in a screenshot and hides the last card of every list in the
+      // app, because each screen would then need its own bottom padding to
+      // compensate — forty places to get wrong. The bar keeps its own row; the
+      // page background shows around it, which is what makes it read as
+      // floating anyway.
       body: SafeArea(bottom: false, child: shell),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.line)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.all(Radius.circular(26)),
+              border: Border.all(color: AppColors.line),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14122636),
+                  blurRadius: 30,
+                  offset: Offset(0, 14),
+                  spreadRadius: -12,
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 for (var i = 0; i < tabs.length; i++)
@@ -86,31 +103,57 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppShapes.pillRadius,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              selected ? tab.activeIcon : tab.icon,
-              size: 22,
-              color: selected ? color : AppColors.faint,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? color : AppColors.faint,
+    // The label stays visible on every tab, selected or not. Hiding the
+    // inactive ones is the fashionable version of this bar and it costs a
+    // first-time user the map of the app — on a product where half the users
+    // are teenagers meeting it once, that is the wrong trade.
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 3),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: .10) : Colors.transparent,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // The icon lifts a little when its tab is chosen. Two pixels is
+              // enough to read as a state change without becoming a bounce the
+              // user waits for on every tap.
+              AnimatedSlide(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                offset: selected ? const Offset(0, -.06) : Offset.zero,
+                child: Icon(
+                  selected ? tab.activeIcon : tab.icon,
+                  size: 21,
+                  color: selected ? color : AppColors.faint2,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontFamily: AppFonts.body,
+                  fontFamilyFallback: AppFonts.bodyFallback,
+                  fontSize: 10,
+                  height: 1.1,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? color : AppColors.faint2,
+                ),
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ],
+          ),
         ),
       ),
     );
