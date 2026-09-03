@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../app_fonts.dart';
@@ -319,4 +320,139 @@ void main() {
     await tester.pumpAndSettle();
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('teacher_groups.png'));
   });
+
+  testWidgets('test cover', (tester) async {
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(),
+        'GET /settings': settingsJson,
+        'GET /home': {'greeting': 'day', 'metrics': [], 'week': []},
+        'GET /group': const [],
+        // `GET /v1/test/:id`, verbatim from the server.
+        'GET /test/t1': {
+          'id': 't1',
+          'student_test_id': 'st1',
+          'title': 'Present tenses',
+          'subject': 'Ingliz tili',
+          'topic': 'Present tenses',
+          'group': {'id': 'g1', 'name': 'IELTS Evening'},
+          'question_count': 20,
+          'time_limit_min': 30,
+          'pass_score': 70,
+          'difficulty': 'mixed',
+          'due_at': null,
+          'state': 'assigned',
+          'score': null,
+          'attempts_left': 2,
+          'allow_calculator': false,
+        },
+      }),
+    );
+    await goTo(tester, '/student/test/t1');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('test_cover.png'));
+  });
+
+  testWidgets('test result', (tester) async {
+    Map<String, dynamic> question(
+      int position,
+      String skill,
+      int chosen,
+      int answer,
+    ) =>
+        {
+          'id': 'q$position',
+          'position': position,
+          'text': 'She ___ to school every day.',
+          'skill': skill,
+          'options': const ['go', 'goes', 'going', 'gone'],
+          'figure': null,
+          'chosen_index': chosen,
+          'is_correct': chosen == answer,
+          'answer_index': answer,
+          'explanation': 'Present Simple, uchinchi shaxs birlik uchun -s qo\'shiladi.',
+        };
+
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(),
+        'GET /settings': settingsJson,
+        'GET /home': {'greeting': 'day', 'metrics': [], 'week': []},
+        'GET /group': const [],
+        'GET /test/t1/result': {
+          'student_test_id': 'st1',
+          'title': 'Present tenses',
+          'score': 80,
+          'correct_count': 16,
+          'total': 20,
+          'passed': true,
+          'pass_score': 70,
+          'submitted_at': '2026-09-02T14:12:00.000Z',
+          'duration_sec': 1140,
+          'show_answers': true,
+          'show_explanation': true,
+          'questions': [
+            question(1, 'Present Simple', 1, 1),
+            question(2, 'Present Continuous', 3, 1),
+          ],
+        },
+      }),
+    );
+    await goTo(tester, '/student/test/t1/result');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('test_result.png'));
+  });
+  testWidgets('test runner', (tester) async {
+    Map<String, dynamic> question(int position, String skill, int? chosen) => {
+          'id': 'q$position',
+          'position': position,
+          'text': 'She ___ to school every day.',
+          'skill': skill,
+          'options': const ['go', 'goes', 'going', 'gone'],
+          'figure': null,
+          'chosen_index': chosen,
+          // `answer_index` and `explanation` are deliberately absent here —
+          // the server does not ship them before submission, and a fixture
+          // that included them would hide it if the client ever started
+          // reading them.
+        };
+
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(),
+        'GET /settings': settingsJson,
+        'GET /home': {'greeting': 'day', 'metrics': [], 'week': []},
+        'GET /group': const [],
+        'POST /test/t1/start': {
+          'student_test_id': 'st1',
+          'attempt_no': 1,
+          'expires_at': '2099-01-01T00:00:00.000Z',
+          'time_limit_min': 30,
+          'questions': [
+            question(1, 'Present Simple', null),
+            question(2, 'Present Continuous', null),
+            question(3, 'Present Perfect', null),
+          ],
+        },
+      }),
+    );
+    await goTo(tester, '/student/test/t1/run');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('test_runner.png'));
+  });
+}
+
+/// Drives the app's own router to a pushed route.
+///
+/// These two screens live above the tab shell and there is no tab that reaches
+/// them, so a golden has to navigate the way the app does rather than by
+/// building the widget directly — which would skip the router, the shell and
+/// the theme the screen is actually drawn inside.
+Future<void> goTo(WidgetTester tester, String location) async {
+  final context = tester.element(find.byType(Scaffold).first);
+  GoRouter.of(context).push(location);
+  await tester.pumpAndSettle();
 }

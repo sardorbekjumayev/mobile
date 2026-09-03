@@ -31,6 +31,9 @@ class S {
   String get rankedOf => _t('ranked_of');
   String get levelSuffix => _t('level_suffix');
   String get roomSuffix => _t('room_suffix');
+  String get questionsLabel => _t('questions_label');
+  String get timeLimitLabel => _t('time_limit_label');
+  String get attemptsLabel => _t('attempts_label');
   String get phoneTitle => _t('phone_title');
   String get phoneBody => _t('phone_body');
   String get phoneHint => _t('phone_hint');
@@ -232,6 +235,9 @@ class S {
       'ranked_of': 'o\'quvchi ichida',
       'level_suffix': 'daraja',
       'room_suffix': 'xona',
+      'questions_label': 'Savollar',
+      'time_limit_label': 'Vaqt chegarasi',
+      'attempts_label': 'Qolgan urinishlar',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
       'phone_hint': 'Hisobni o\'quv markaz ochadi',
@@ -412,6 +418,9 @@ class S {
       'ranked_of': 'учеников в рейтинге',
       'level_suffix': 'уровень',
       'room_suffix': 'кабинет',
+      'questions_label': 'Вопросов',
+      'time_limit_label': 'Ограничение времени',
+      'attempts_label': 'Осталось попыток',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
       'phone_hint': 'Аккаунт создаёт центр',
@@ -592,6 +601,9 @@ class S {
       'ranked_of': 'students ranked',
       'level_suffix': 'level',
       'room_suffix': 'room',
+      'questions_label': 'Questions',
+      'time_limit_label': 'Time limit',
+      'attempts_label': 'Attempts left',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
       'phone_hint': 'Your center creates the account',

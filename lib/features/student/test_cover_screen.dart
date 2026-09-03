@@ -31,18 +31,25 @@ class TestCoverScreen extends StatelessWidget {
             Text(test.title, style: Theme.of(context).textTheme.displaySmall),
             const SizedBox(height: 8),
             Text(
-              '${test.subject} · ${test.groupName}',
+              [test.subject, test.groupName].where((e) => e.isNotEmpty).join(' · '),
               style: const TextStyle(fontSize: 13.5, color: AppColors.muted),
             ),
             const SizedBox(height: 22),
             AppCard(
               child: Column(
                 children: [
-                  _Row(label: s.questions, value: '${test.questionCount}'),
-                  _Row(label: s.minutes, value: '${test.timeLimitMin}'),
+                  // `s.questions` and `s.minutes` are unit suffixes — they exist
+                  // to build "20 savol" and read as sentence fragments when used
+                  // as labels on their own, which is what this card was doing:
+                  // "savol 20", "daqiqa 30", "urinish qoldi 2".
+                  _Row(label: s.questionsLabel, value: '${test.questionCount}'),
+                  _Row(
+                    label: s.timeLimitLabel,
+                    value: '${test.timeLimitMin} ${s.minutes}',
+                  ),
                   if (test.passScore != null)
                     _Row(label: s.passScore, value: '${test.passScore}'),
-                  _Row(label: s.attemptsLeft, value: '${test.attemptsLeft}'),
+                  _Row(label: s.attemptsLabel, value: '${test.attemptsLeft}'),
                   if (test.dueAt != null)
                     _Row(
                       label: s.due,

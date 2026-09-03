@@ -11,6 +11,7 @@ class TestAttempt {
     required this.attemptNo,
     required this.questions,
     this.expiresAt,
+    this.timeLimitMin,
   });
 
   factory TestAttempt.fromJson(Map<String, dynamic> j) => TestAttempt(
@@ -19,6 +20,7 @@ class TestAttempt {
         questions: mapList(j['questions'], ExamQuestion.fromJson)
           ..sort((a, b) => a.position.compareTo(b.position)),
         expiresAt: asDate(j['expires_at']),
+        timeLimitMin: asIntOrNull(j['time_limit_min']),
       );
 
   final String studentTestId;
@@ -30,10 +32,23 @@ class TestAttempt {
   /// the answers that arrived before it.
   final DateTime? expiresAt;
 
+  /// The test's own limit, and the ceiling on [remaining].
+  final int? timeLimitMin;
+
+  /// Time left, clamped to the test's limit.
+  ///
+  /// `expires_at` is computed server-side and compared against the *phone's*
+  /// clock here, so a device set a day behind — or a stale expiry — produced a
+  /// countdown of six hundred thousand hours. A student can never have more
+  /// time left than the test allows, so that is the cap.
   Duration? get remaining {
     if (expiresAt == null) return null;
     final left = expiresAt!.difference(DateTime.now());
-    return left.isNegative ? Duration.zero : left;
+    if (left.isNegative) return Duration.zero;
+    final limit = timeLimitMin;
+    if (limit == null) return left;
+    final ceiling = Duration(minutes: limit);
+    return left > ceiling ? ceiling : left;
   }
 }
 

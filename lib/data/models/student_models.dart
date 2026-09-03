@@ -21,7 +21,10 @@ class TestSummary {
         id: asString(j['id']),
         title: asString(j['title']),
         subject: asString(j['subject']),
-        groupName: asString(j['group_name']),
+        // Two endpoints, two shapes: the list sends `group_name`, the detail
+        // sends `group: { id, name }`. Reading only the first left the cover
+        // screen with an empty group and a dangling separator.
+        groupName: asString(j['group_name'] ?? asMap(j['group'])['name']),
         questionCount: asInt(j['question_count']),
         timeLimitMin: asInt(j['time_limit_min']),
         state: TestState.parse(j['state']),
