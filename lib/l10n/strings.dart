@@ -35,6 +35,10 @@ class S {
   String get passwordField => _t('password_field');
   String get signIn => _t('sign_in');
   String get loginAdminHint => _t('login_admin_hint');
+  String get phoneNotFound => _t('phone_not_found');
+  String get phoneNotFoundTitle => _t('phone_not_found_title');
+  String get foundStudent => _t('found_student');
+  String get foundTeacher => _t('found_teacher');
   String get successTitle => _t('success_title');
   String get successBody => _t('success_body');
   String get openStepix => _t('open_stepix');
@@ -219,6 +223,10 @@ class S {
       'password_field': 'Parolingiz',
       'sign_in': 'Kirish',
       'login_admin_hint': 'Markaz administratorimisiz? Bu ilova o\'quvchi va o\'qituvchilar uchun — administrator brauzerdagi panelga kiradi.',
+      'phone_not_found': 'Bu raqam topilmadi. Raqamni tekshiring yoki o\'quv markazingizga murojaat qiling.',
+      'phone_not_found_title': 'Raqam topilmadi',
+      'found_student': 'O\'quvchi topildi',
+      'found_teacher': 'O\'qituvchi topildi',
       'success_title': 'Xush kelibsiz!',
       'success_body': 'Hammasi tayyor. Birinchi testni boshlaymizmi?',
       'open_stepix': 'Stepix\'ni ochish',
@@ -382,6 +390,10 @@ class S {
       'password_field': 'Ваш пароль',
       'sign_in': 'Войти',
       'login_admin_hint': 'Вы администратор центра? Это приложение — для учеников и преподавателей; администратор входит в панель в браузере.',
+      'phone_not_found': 'Номер не найден. Проверьте номер или обратитесь в учебный центр.',
+      'phone_not_found_title': 'Номер не найден',
+      'found_student': 'Ученик найден',
+      'found_teacher': 'Преподаватель найден',
       'success_title': 'Добро пожаловать!',
       'success_body': 'Всё готово. Начнём с первого теста?',
       'open_stepix': 'Открыть Stepix',
@@ -545,6 +557,10 @@ class S {
       'password_field': 'Your password',
       'sign_in': 'Sign in',
       'login_admin_hint': 'Are you a center admin? This app is for students and teachers — admins sign in to the panel in a browser.',
+      'phone_not_found': 'That number was not found. Check it, or ask your learning center.',
+      'phone_not_found_title': 'Number not found',
+      'found_student': 'Student found',
+      'found_teacher': 'Teacher found',
       'success_title': 'Welcome!',
       'success_body': 'You are all set. Shall we start with the first test?',
       'open_stepix': 'Open Stepix',

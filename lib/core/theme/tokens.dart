@@ -43,6 +43,8 @@ class AppColors {
   static const sandTint = Color(0xFFFDF3E4);
   static const clay = Color(0xFFA2503F);
   static const clayTint = Color(0xFFFDECEA);
+  /// The border for a clay-tinted card — one step darker than its fill.
+  static const clayLight = Color(0xFFF6D2CC);
   static const violet = Color(0xFF6B4FD8);
   static const violetDark = Color(0xFF4735A0);
   static const violetTint = Color(0xFFEFEAFD);

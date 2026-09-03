@@ -38,6 +38,23 @@ class AuthRepository {
     return LoginResult(tokens: tokens, identity: Identity.fromJson(data));
   }
 
+  /// Is this number a student or a teacher of ours?
+  ///
+  /// **Fails open.** A rate limit, an offline moment or any other error answers
+  /// `found: true` with no role, which lets the user carry on to the password
+  /// screen. The alternative — treating a failed lookup as "no such number" —
+  /// would lock a legitimate student out of a login form that would have worked,
+  /// on the strength of a convenience call.
+  Future<PhoneLookup> lookup(String phone) async {
+    try {
+      return PhoneLookup.fromJson(
+        asMap(await _api.post('/auth/lookup', body: {'phone': normalizePhone(phone)})),
+      );
+    } on ApiException {
+      return const PhoneLookup(found: true);
+    }
+  }
+
   /// Called on every cold start rather than trusting cached state — which is
   /// how a block or a suspension takes effect within one app launch.
   Future<Identity> me() async => Identity.fromJson(asMap(await _api.get('/auth/me')));

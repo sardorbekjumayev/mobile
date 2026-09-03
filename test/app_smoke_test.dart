@@ -42,6 +42,7 @@ Future<void> pumpApp(
         Provider(create: (_) => StudentRepository(api)),
         Provider(create: (_) => TeacherRepository(api)),
         Provider<ProfileRepository>.value(value: profiles),
+        Provider<AuthRepository>(create: (_) => AuthRepository(api)),
         ChangeNotifierProvider<SessionController>.value(value: session),
         ChangeNotifierProvider(create: (_) => SettingsController(profiles)),
       ],

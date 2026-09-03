@@ -40,11 +40,8 @@ Future<void> main() async {
     onSessionExpired: () => session.expire(),
   );
   final profiles = ProfileRepository(api);
-  session = SessionController(
-    auth: AuthRepository(api),
-    tokens: tokens,
-    config: config,
-  );
+  final auth = AuthRepository(api);
+  session = SessionController(auth: auth, tokens: tokens, config: config);
 
   // Asks `/auth/me` who the stored tokens belong to before the first frame that
   // could show a home screen — a cached role is exactly how a suspension fails
@@ -60,6 +57,9 @@ Future<void> main() async {
         Provider(create: (_) => StudentRepository(api)),
         Provider(create: (_) => TeacherRepository(api)),
         Provider<ProfileRepository>.value(value: profiles),
+        // The phone screen calls `/auth/lookup` before there is a session, so
+        // the repository is a provider rather than a private field of one.
+        Provider<AuthRepository>.value(value: auth),
         ChangeNotifierProvider<SessionController>.value(value: session),
         ChangeNotifierProvider(create: (_) => SettingsController(profiles)),
       ],

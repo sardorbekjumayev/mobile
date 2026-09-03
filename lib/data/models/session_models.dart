@@ -84,6 +84,28 @@ class CenterBrand {
   final Color? brandDark;
 }
 
+/// `POST /auth/lookup` — whether a number belongs to a student or a teacher.
+///
+/// Deliberately thin: the server sends `found` and `role` and nothing else, so
+/// there is no name and no center to render. Anything richer would be a
+/// directory anyone could read one number at a time.
+class PhoneLookup {
+  const PhoneLookup({required this.found, this.role});
+
+  const PhoneLookup.notFound() : found = false, role = null;
+
+  factory PhoneLookup.fromJson(Map<String, dynamic> j) => PhoneLookup(
+        found: asBool(j['found']),
+        role: j['role'] == null ? null : UserRole.parse(j['role']),
+      );
+
+  final bool found;
+
+  /// Null when [found] is false, and also when the lookup could not be made at
+  /// all — see [AuthRepository.lookup].
+  final UserRole? role;
+}
+
 /// `/auth/login` and `/auth/me` return the same `user` + `center` pair.
 class Identity {
   const Identity({required this.user, this.center});

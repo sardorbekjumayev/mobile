@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/tokens.dart';
+import '../../data/models/session_models.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
 
 /// M2 — phone entry, with the design's own 12-key pad rather than the system
 /// keyboard, so the layout below it never jumps.
 ///
-/// Validation is entirely client-side: there is no "does this number exist"
-/// endpoint, and adding one would hand anyone a way to walk the +998 range and
-/// learn which numbers are enrolled.
+/// "Continue" asks `POST /auth/lookup` whether the number belongs to a student
+/// or a teacher, and says which. That endpoint is a deliberate, bounded leak —
+/// see its handler for what it refuses to answer and why. The screen's own rule
+/// is that a lookup which *fails* never blocks anyone: only a definite
+/// `found: false` stops here, and everything else carries on to the password
+/// screen.
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({super.key});
 
@@ -22,6 +28,9 @@ class _PhoneScreenState extends State<PhoneScreen> {
   /// National digits after the `+998` prefix: `90 123 45 67`.
   String _digits = '';
 
+  bool _busy = false;
+  String? _error;
+
   static const _maxDigits = 9;
 
   bool get _isComplete => _digits.length == _maxDigits;
@@ -31,12 +40,41 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
   void _push(String d) {
     if (_digits.length >= _maxDigits) return;
-    setState(() => _digits += d);
+    setState(() {
+      _digits += d;
+      _error = null;
+    });
   }
 
   void _pop() {
     if (_digits.isEmpty) return;
-    setState(() => _digits = _digits.substring(0, _digits.length - 1));
+    setState(() {
+      _digits = _digits.substring(0, _digits.length - 1);
+      _error = null;
+    });
+  }
+
+  Future<void> _continue() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    final auth = context.read<AuthRepository>();
+    final notFound = S.of(context).phoneNotFound;
+
+    // `lookup` swallows its own failures and answers `found: true` with no role,
+    // so the only branch that stops here is a server that actually said no.
+    final result = await auth.lookup(_e164);
+    if (!mounted) return;
+
+    setState(() => _busy = false);
+    if (!result.found) {
+      setState(() => _error = notFound);
+      return;
+    }
+    context.go('/login/password', extra: LoginTarget(phone: _e164, role: result.role));
   }
 
   @override
@@ -61,15 +99,25 @@ class _PhoneScreenState extends State<PhoneScreen> {
               const SizedBox(height: 24),
               _PhoneField(digits: _digits),
               const SizedBox(height: 14),
-              _HintCard(title: s.phoneHint, text: s.phoneHintText),
+              // The error takes the hint card's slot rather than stacking under
+              // it: this screen has a keypad below and no room to grow, and the
+              // two say the same kind of thing anyway.
+              if (_error case final error?)
+                _HintCard(
+                  key: const Key('phone-error'),
+                  title: s.phoneNotFoundTitle,
+                  text: error,
+                  tone: _HintTone.warning,
+                )
+              else
+                _HintCard(title: s.phoneHint, text: s.phoneHintText),
               const Spacer(),
               _Keypad(onDigit: _push, onBackspace: _pop),
               const SizedBox(height: 14),
               BrandButton(
                 label: s.continueLabel,
-                onPressed: _isComplete
-                    ? () => context.go('/login/password', extra: _e164)
-                    : null,
+                busy: _busy,
+                onPressed: _isComplete && !_busy ? _continue : null,
               ),
             ],
           ),
@@ -77,6 +125,19 @@ class _PhoneScreenState extends State<PhoneScreen> {
       ),
     );
   }
+}
+
+/// What the phone screen hands the password screen.
+///
+/// [role] is null when the lookup could not be made — offline, rate limited —
+/// in which case the password screen simply shows no badge. It is never a
+/// reason to refuse the login.
+class LoginTarget {
+  const LoginTarget({required this.phone, this.role});
+
+  /// `998901234567`.
+  final String phone;
+  final UserRole? role;
 }
 
 /// `90 123 45 67` — grouped as the country writes it, so a mistyped digit is
@@ -134,30 +195,39 @@ class _PhoneField extends StatelessWidget {
   }
 }
 
+enum _HintTone { info, warning }
+
 class _HintCard extends StatelessWidget {
-  const _HintCard({required this.title, required this.text});
+  const _HintCard({
+    super.key,
+    required this.title,
+    required this.text,
+    this.tone = _HintTone.info,
+  });
 
   final String title;
   final String text;
+  final _HintTone tone;
 
   @override
   Widget build(BuildContext context) {
+    final warn = tone == _HintTone.warning;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
-        color: AppColors.blueTint2,
+        color: warn ? AppColors.clayTint : AppColors.blueTint2,
         borderRadius: const BorderRadius.all(Radius.circular(22)),
-        border: Border.all(color: AppColors.blueLight5),
+        border: Border.all(color: warn ? AppColors.clayLight : AppColors.blueLight5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const BlobAvatar(
+          BlobAvatar(
             text: '',
-            icon: Icons.info_outline_rounded,
+            icon: warn ? Icons.error_outline_rounded : Icons.info_outline_rounded,
             size: 34,
-            background: AppColors.blueTint,
-            foreground: AppColors.blueDark,
+            background: warn ? AppColors.clayTint : AppColors.blueTint,
+            foreground: warn ? AppColors.clay : AppColors.blueDark,
           ),
           const SizedBox(width: 11),
           Expanded(

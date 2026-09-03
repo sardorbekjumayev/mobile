@@ -4,21 +4,28 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/session/session_controller.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
+import '../../data/models/session_models.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
 import 'phone_screen.dart' show formatUzPhone;
 
 /// M3 — password entry and the only call to `POST /auth/login`.
 ///
-/// The prototype showed the account's name and center above the field. Real
-/// sign-in cannot: resolving a name from a phone number before authentication
-/// is the same oracle the single `20105` error code exists to prevent.
+/// The badge above the field says "student" or "teacher", never a name. The
+/// prototype showed the account's full name and center here; that is the oracle
+/// the single `20105` error code exists to prevent, and `/auth/lookup` refuses
+/// to answer it too.
 class PasswordScreen extends StatefulWidget {
-  const PasswordScreen({super.key, required this.phone});
+  const PasswordScreen({super.key, required this.phone, this.role});
 
   /// `998901234567`.
   final String phone;
+
+  /// From `/auth/lookup`. Null when the lookup could not be made, in which case
+  /// no badge is drawn and nothing else changes.
+  final UserRole? role;
 
   @override
   State<PasswordScreen> createState() => _PasswordScreenState();
@@ -121,6 +128,12 @@ class _PasswordScreenState extends State<PasswordScreen> {
                 ),
                 style: const TextStyle(fontSize: 13.5, height: 1.6, color: AppColors.muted),
               ),
+              if (widget.role case final role?) ...[
+                const SizedBox(height: 14),
+                _RoleBadge(
+                  label: role.isTeacher ? s.foundTeacher : s.foundStudent,
+                ),
+              ],
               const SizedBox(height: 22),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
@@ -193,6 +206,41 @@ class _PasswordScreenState extends State<PasswordScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "O'quvchi topildi" — the whole of what the lookup is allowed to say.
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('login-role-badge'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 15, color: context.brand.primary),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.body,
+            ),
+          ),
+        ],
       ),
     );
   }

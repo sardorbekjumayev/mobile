@@ -107,11 +107,15 @@ GoRouter createRouter({
       GoRoute(path: '/login/phone', builder: (context, state) => const PhoneScreen()),
       GoRoute(
         path: '/login/password',
-        // The E.164 number the previous screen assembled. A deep link that
-        // arrives without it starts over rather than guessing.
-        builder: (context, state) => state.extra is String
-            ? PasswordScreen(phone: state.extra as String)
-            : const PhoneScreen(),
+        // The number the previous screen assembled, plus the role its lookup
+        // resolved. A deep link that arrives with neither starts over rather
+        // than guessing; one that arrives with a bare number still works, and
+        // simply shows no role badge.
+        builder: (context, state) => switch (state.extra) {
+          final LoginTarget t => PasswordScreen(phone: t.phone, role: t.role),
+          final String phone => PasswordScreen(phone: phone),
+          _ => const PhoneScreen(),
+        },
       ),
       GoRoute(path: '/login/success', builder: (context, state) => const SuccessScreen()),
       GoRoute(

@@ -75,7 +75,7 @@ Uch qoida butun kod bo'ylab takrorlanadi:
 
 | Kod | Ekran | Endpointlar |
 |---|---|---|
-| M1–M3 | Welcome · telefon · parol | `POST /auth/login` |
+| M1–M3 | Welcome · telefon · parol | `POST /auth/lookup` · `POST /auth/login` |
 | M4 | O'quvchi asosiy | `GET /home` · `GET /group` |
 | M6 | Guruh | `GET /group/:id` |
 | M7–M9 | Testlar · test · natija | `GET /test` · `/start` `/answer` `/submit` · `/result` |
@@ -89,6 +89,27 @@ Uch qoida butun kod bo'ylab takrorlanadi:
 | M19 | Sozlamalar | `GET /settings` · `POST /auth/change-password` |
 
 To'liq shartnoma: `stepix_architecture/02-API-MOBILE.md`.
+
+### `POST /auth/lookup` haqida
+
+Telefon ekrani "Davom etish" bosilganda raqamni tekshiradi va parol ekranida
+"O'quvchi topildi" / "O'qituvchi topildi" deb ko'rsatadi.
+
+Bu ataylab qilingan, chegaralangan ochiqlik. `POST /auth/login` xato raqam va
+xato parolga bitta xato kodi qaytaradi — aynan shuning uchunki hech kim +998
+oralig'ini ketma-ket sinab, qaysi raqamlar tizimda borligini bilib olmasin.
+Lookup o'sha faktni to'g'ridan-to'g'ri aytadi. Zararni uchta narsa cheklaydi:
+
+1. **`center_admin` va `super_admin` uchun `found: false`.** Administrator
+   raqami hech qachon ochilmagan raqamdan farq qilmaydi — aks holda endpoint
+   "qaysi raqam administrator" ro'yxatiga aylanadi.
+2. **Bir IP uchun daqiqada 5 ta**, keyin `10005` va hech narsa tasdiqlanmaydi.
+3. **Ism ham, markaz ham, holat ham yo'q** — faqat `found` va `role`.
+
+Ilova tomonida qoida: **lookup xato bersa hech kimni to'xtatmaydi.** Rate limit,
+uzilish yoki 500 — hammasi `found: true` (rolsiz) deb qabul qilinadi va
+foydalanuvchi parol ekraniga o'tadi. Aks holda bitta qulaylik chaqirig'i
+paroli to'g'ri o'quvchini kirish formasidan mahrum qilardi.
 
 ## Hali ulanmagan
 
