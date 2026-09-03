@@ -31,11 +31,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   bool _saving = false;
 
   Future<void> _pickDate() async {
+    // Date-only on every bound. `DateTime.now()` carries a time, and a picker
+    // whose `lastDate` is 14:32 today asserts against an `initialDate` of
+    // 14:33 today — a crash that only shows up after the screen has been open
+    // for a moment, which is the hardest kind to reproduce.
+    final today = DateUtils.dateOnly(DateTime.now());
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date,
-      firstDate: DateTime.now().subtract(const Duration(days: 90)),
-      lastDate: DateTime.now(),
+      initialDate: DateUtils.dateOnly(_date),
+      firstDate: today.subtract(const Duration(days: 90)),
+      lastDate: today,
     );
     if (picked != null) setState(() => _date = picked);
   }
@@ -60,10 +65,21 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.registerSaved)));
-      context.pop();
+      // The register may have been opened from the group card or from the
+      // group detail; either way there is a page under it. If there somehow is
+      // not, staying put with the register saved beats crashing on the way out.
+      if (context.canPop()) context.pop();
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      // Anything the server did not shape as an envelope: a proxy's HTML, a
+      // field the models could not read. The register is the one write a
+      // teacher makes and it must not fail silently or as a red screen.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context).somethingWentWrong)),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

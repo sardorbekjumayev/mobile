@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'session_models.dart' show initialsOf;
 import 'student_models.dart';
 
 /// `GET /teacher/home`.
@@ -158,17 +159,35 @@ class TeacherGroupDetail {
   final List<RosterEntry> roster;
 }
 
-/// How engaged a student is, bucketed server-side like [SkillTone].
+/// How engaged a student is, bucketed server-side.
+///
+/// These are the server's own four words, not a low/medium/high scale. The
+/// client used to parse `low`/`medium`/`high`, which the API has never sent —
+/// so every student fell through to the default and the roster showed forty
+/// identical amber dots. On a screen whose whole job is spotting the student
+/// who stopped turning up, that is the screen not working.
 enum Engagement {
-  low,
-  medium,
-  high;
+  /// Never opened the app, or has taken no test yet.
+  isNew,
+
+  /// Seen in the last week and taking tests.
+  active,
+
+  /// A week or more quiet, or no tests at all.
+  slipping,
+
+  /// Two weeks or more with no sign of them.
+  inactive;
 
   static Engagement parse(dynamic v) => switch (asString(v)) {
-        'low' => Engagement.low,
-        'high' => Engagement.high,
-        _ => Engagement.medium,
+        'active' => Engagement.active,
+        'slipping' => Engagement.slipping,
+        'inactive' => Engagement.inactive,
+        _ => Engagement.isNew,
       };
+
+  /// True where the teacher is meant to do something about it.
+  bool get needsAttention => this == Engagement.slipping || this == Engagement.inactive;
 }
 
 class RosterEntry {
@@ -184,7 +203,10 @@ class RosterEntry {
   factory RosterEntry.fromJson(Map<String, dynamic> j) => RosterEntry(
         id: asString(j['id'] ?? j['student_id']),
         fullName: asString(j['full_name']),
-        initials: asString(j['initials']),
+        // Only `GET /student/group/:id` sends `initials`; every other endpoint
+        // sends the name alone, and reading a field that is not there drew a
+        // blank avatar next to every student.
+        initials: asStringOrNull(j['initials']) ?? initialsOf(asString(j['full_name'])),
         engagement: Engagement.parse(j['engagement']),
         avgScore: asIntOrNull(j['avg_score']),
         attendancePct: asIntOrNull(j['attendance_pct']),
@@ -354,7 +376,10 @@ class TestParticipant {
   factory TestParticipant.fromJson(Map<String, dynamic> j) => TestParticipant(
         studentId: asString(j['student_id'] ?? j['id']),
         fullName: asString(j['full_name']),
-        initials: asString(j['initials']),
+        // Only `GET /student/group/:id` sends `initials`; every other endpoint
+        // sends the name alone, and reading a field that is not there drew a
+        // blank avatar next to every student.
+        initials: asStringOrNull(j['initials']) ?? initialsOf(asString(j['full_name'])),
         state: TestState.parse(j['state']),
         score: asIntOrNull(j['score']),
         submittedAt: asDate(j['submitted_at']),

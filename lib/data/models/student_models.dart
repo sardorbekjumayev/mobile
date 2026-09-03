@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'session_models.dart' show initialsOf;
 
 /// A test as it appears in a list or on the home card.
 class TestSummary {
@@ -285,7 +286,10 @@ class Classmate {
   factory Classmate.fromJson(Map<String, dynamic> j) => Classmate(
         id: asString(j['id']),
         fullName: asString(j['full_name']),
-        initials: asString(j['initials']),
+        // Only `GET /student/group/:id` sends `initials`; every other endpoint
+        // sends the name alone, and reading a field that is not there drew a
+        // blank avatar next to every student.
+        initials: asStringOrNull(j['initials']) ?? initialsOf(asString(j['full_name'])),
       );
 
   final String id;

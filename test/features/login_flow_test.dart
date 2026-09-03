@@ -28,19 +28,20 @@ void main() {
       await tester.tap(find.widgetWithText(InkWell, d));
       await tester.pump();
     }
-    await tester.tap(find.text('Davom etish'));
-    await tester.pumpAndSettle();
   }
 
-  testWidgets('a teacher number is named as a teacher on the password screen', (tester) async {
+  Finder cardTitle() => find.byKey(const Key('phone-detection-title'));
+
+  testWidgets('the card names a teacher as soon as the ninth digit lands', (tester) async {
     await pumpApp(tester, api: FakeApiClient({
       'POST /auth/lookup': {'found': true, 'role': 'teacher'},
     }));
 
     await enterNumber(tester);
 
-    expect(find.byKey(const Key('login-role-badge')), findsOneWidget);
-    expect(find.text('O\'qituvchi topildi'), findsOneWidget);
+    expect(tester.widget<Text>(cardTitle()).data, 'O\'qituvchi');
+    // Still on the phone screen — the card resolves before "Davom etish".
+    expect(find.text('Davom etish'), findsOneWidget);
   });
 
   testWidgets('a student number is named as a student', (tester) async {
@@ -50,18 +51,21 @@ void main() {
 
     await enterNumber(tester);
 
-    expect(find.text('O\'quvchi topildi'), findsOneWidget);
+    expect(tester.widget<Text>(cardTitle()).data, 'O\'quvchi');
   });
 
-  testWidgets('a number the server does not know stops on the phone screen', (tester) async {
+  testWidgets('a number the server does not know cannot continue', (tester) async {
     await pumpApp(tester, api: FakeApiClient({
       'POST /auth/lookup': {'found': false},
     }));
 
     await enterNumber(tester);
 
-    expect(find.byKey(const Key('phone-error')), findsOneWidget);
-    expect(find.byKey(const Key('login-role-badge')), findsNothing);
+    expect(tester.widget<Text>(cardTitle()).data, 'Raqam topilmadi');
+    await tester.tap(find.text('Davom etish'));
+    await tester.pumpAndSettle();
+    // The button is dead, not merely unhelpful: still the phone screen.
+    expect(find.text('Kirish'), findsNothing);
   });
 
   testWidgets('a lookup that fails lets the user through anyway', (tester) async {
@@ -71,9 +75,11 @@ void main() {
 
     await enterNumber(tester);
 
-    expect(find.byKey(const Key('phone-error')), findsNothing);
-    // Through to the password screen, just without a badge.
+    // The card stays neutral, because nothing was learned…
+    expect(tester.widget<Text>(cardTitle()).data, 'Hisobni o\'quv markaz ochadi');
+    // …and the button still works.
+    await tester.tap(find.text('Davom etish'));
+    await tester.pumpAndSettle();
     expect(find.text('Kirish'), findsOneWidget);
-    expect(find.byKey(const Key('login-role-badge')), findsNothing);
   });
 }

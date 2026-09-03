@@ -67,10 +67,11 @@ class _RosterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final (dotColor, _) = switch (entry.engagement) {
-      Engagement.low => (AppColors.clay, 'low'),
-      Engagement.medium => (AppColors.sand, 'medium'),
-      Engagement.high => (AppColors.green, 'high'),
+    final (dotColor, dotLabel) = switch (entry.engagement) {
+      Engagement.active => (AppColors.green, s.engagementActive),
+      Engagement.slipping => (AppColors.sand, s.engagementSlipping),
+      Engagement.inactive => (AppColors.clay, s.engagementInactive),
+      Engagement.isNew => (AppColors.faint2, s.engagementNew),
     };
 
     return InkWell(
@@ -112,11 +113,23 @@ class _RosterRow extends StatelessWidget {
                 ],
               ),
             ),
+            // A bare coloured dot with no legend is a colour, not information.
+            // The word is what lets a teacher scan the list for who to call.
             Container(
-              width: 8,
-              height: 8,
               margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: dotColor.withValues(alpha: .12),
+                borderRadius: AppShapes.pillRadius,
+              ),
+              child: Text(
+                dotLabel,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: dotColor,
+                ),
+              ),
             ),
             Text(
               entry.avgScore == null ? '—' : '${entry.avgScore}',

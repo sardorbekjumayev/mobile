@@ -29,51 +29,70 @@ class _PhoneScreenState extends State<PhoneScreen> {
   String _digits = '';
 
   bool _busy = false;
-  String? _error;
+
+  /// Null until the number is nine digits long and the lookup has answered.
+  PhoneLookup? _result;
 
   static const _maxDigits = 9;
 
   bool get _isComplete => _digits.length == _maxDigits;
+
+  bool get _canContinue => !_busy && (_result?.found ?? false);
+
+  _CardState get _cardState {
+    if (!_isComplete || _busy) return _CardState.idle;
+    return switch (_result) {
+      null => _CardState.idle,
+      PhoneLookup(found: false) => _CardState.notFound,
+      PhoneLookup(role: UserRole.teacher) => _CardState.teacher,
+      PhoneLookup(role: UserRole.student) => _CardState.student,
+      // Found, but the lookup could not say who — an offline or rate-limited
+      // answer. Neutral card, and the button still works.
+      _ => _CardState.idle,
+    };
+  }
 
   /// `998901234567` — what `POST /auth/login` expects.
   String get _e164 => '998$_digits';
 
   void _push(String d) {
     if (_digits.length >= _maxDigits) return;
-    setState(() {
-      _digits += d;
-      _error = null;
-    });
+    setState(() => _digits += d);
+    if (_isComplete) _lookup();
   }
 
   void _pop() {
     if (_digits.isEmpty) return;
     setState(() {
       _digits = _digits.substring(0, _digits.length - 1);
-      _error = null;
+      _result = null;
+      _busy = false;
     });
   }
 
-  Future<void> _continue() async {
-    if (_busy) return;
+  /// Runs as soon as the ninth digit lands, the way the template's card
+  /// resolves the moment the number is complete. Deleting a digit clears it
+  /// again — a card that still says "Teacher" under a number the user is busy
+  /// editing is worse than no card.
+  Future<void> _lookup() async {
+    final phone = _e164;
     setState(() {
       _busy = true;
-      _error = null;
+      _result = null;
     });
 
-    final auth = context.read<AuthRepository>();
-    final notFound = S.of(context).phoneNotFound;
+    final result = await context.read<AuthRepository>().lookup(phone);
+    // A slow answer for a number the user has since edited is stale; drop it.
+    if (!mounted || phone != _e164) return;
+    setState(() {
+      _busy = false;
+      _result = result;
+    });
+  }
 
-    // `lookup` swallows its own failures and answers `found: true` with no role,
-    // so the only branch that stops here is a server that actually said no.
-    final result = await auth.lookup(_e164);
-    if (!mounted) return;
-
-    setState(() => _busy = false);
-    if (!result.found) {
-      setState(() => _error = notFound);
-      return;
-    }
+  void _continue() {
+    final result = _result;
+    if (result == null || !result.found) return;
     context.go('/login/password', extra: LoginTarget(phone: _e164, role: result.role));
   }
 
@@ -99,25 +118,17 @@ class _PhoneScreenState extends State<PhoneScreen> {
               const SizedBox(height: 24),
               _PhoneField(digits: _digits),
               const SizedBox(height: 14),
-              // The error takes the hint card's slot rather than stacking under
-              // it: this screen has a keypad below and no room to grow, and the
-              // two say the same kind of thing anyway.
-              if (_error case final error?)
-                _HintCard(
-                  key: const Key('phone-error'),
-                  title: s.phoneNotFoundTitle,
-                  text: error,
-                  tone: _HintTone.warning,
-                )
-              else
-                _HintCard(title: s.phoneHint, text: s.phoneHintText),
+              // One card, three identities — the template's "detection card".
+              // It never stacks a second message under itself: this screen has a
+              // keypad below it and no room to grow.
+              _DetectionCard(state: _cardState, busy: _busy),
               const Spacer(),
               _Keypad(onDigit: _push, onBackspace: _pop),
               const SizedBox(height: 14),
               BrandButton(
                 label: s.continueLabel,
                 busy: _busy,
-                onPressed: _isComplete && !_busy ? _continue : null,
+                onPressed: _canContinue ? _continue : null,
               ),
             ],
           ),
@@ -195,39 +206,94 @@ class _PhoneField extends StatelessWidget {
   }
 }
 
-enum _HintTone { info, warning }
+/// The three things the phone screen's one card can be.
+enum _CardState { idle, student, teacher, notFound }
 
-class _HintCard extends StatelessWidget {
-  const _HintCard({
-    super.key,
-    required this.title,
-    required this.text,
-    this.tone = _HintTone.info,
-  });
+/// The template's "detection card": the same slot says what the app knows about
+/// the number, and changes identity as it learns.
+///
+/// One card rather than a hint plus an error plus a badge, because there is a
+/// keypad underneath and no vertical room for a second message — and because
+/// the three states are mutually exclusive anyway.
+class _DetectionCard extends StatelessWidget {
+  const _DetectionCard({required this.state, required this.busy});
 
-  final String title;
-  final String text;
-  final _HintTone tone;
+  final _CardState state;
+
+  /// The lookup is in flight: the icon spins rather than the card flickering
+  /// through a wrong identity on the way to the right one.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
-    final warn = tone == _HintTone.warning;
-    return Container(
+    final s = S.of(context);
+
+    final (title, text, icon, accent, tint) = switch (state) {
+      _CardState.teacher => (
+          s.roleTeacher,
+          s.foundBody,
+          Icons.co_present_rounded,
+          AppColors.violet,
+          AppColors.violetTint,
+        ),
+      _CardState.student => (
+          s.roleStudent,
+          s.foundBody,
+          Icons.school_rounded,
+          AppColors.blueDark,
+          AppColors.blueTint,
+        ),
+      _CardState.notFound => (
+          s.phoneNotFoundTitle,
+          s.phoneNotFound,
+          Icons.error_outline_rounded,
+          AppColors.clay,
+          AppColors.clayTint,
+        ),
+      _CardState.idle => (
+          s.phoneHint,
+          s.phoneHintText,
+          Icons.badge_outlined,
+          AppColors.muted,
+          AppColors.surface2,
+        ),
+    };
+
+    final resolved = state != _CardState.idle;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
-        color: warn ? AppColors.clayTint : AppColors.blueTint2,
+        color: tint,
         borderRadius: const BorderRadius.all(Radius.circular(22)),
-        border: Border.all(color: warn ? AppColors.clayLight : AppColors.blueLight5),
+        border: Border.all(color: resolved ? accent : AppColors.line),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BlobAvatar(
-            text: '',
-            icon: warn ? Icons.error_outline_rounded : Icons.info_outline_rounded,
-            size: 34,
-            background: warn ? AppColors.clayTint : AppColors.blueTint,
-            foreground: warn ? AppColors.clay : AppColors.blueDark,
+          Container(
+            key: ValueKey(state),
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: resolved ? accent : AppColors.track2,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(17),
+                topRight: Radius.circular(17),
+                bottomRight: Radius.circular(17),
+                bottomLeft: Radius.circular(6),
+              ),
+            ),
+            child: busy
+                ? const SizedBox(
+                    width: 15,
+                    height: 15,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted),
+                  )
+                : Icon(icon, size: 17, color: resolved ? Colors.white : AppColors.muted),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -236,10 +302,11 @@ class _HintCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  key: const Key('phone-detection-title'),
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: resolved ? accent : AppColors.ink,
                   ),
                 ),
                 const SizedBox(height: 2),

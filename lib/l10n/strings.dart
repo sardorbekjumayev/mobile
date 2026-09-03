@@ -39,6 +39,13 @@ class S {
   String get phoneNotFoundTitle => _t('phone_not_found_title');
   String get foundStudent => _t('found_student');
   String get foundTeacher => _t('found_teacher');
+  String get roleStudent => _t('role_student');
+  String get roleTeacher => _t('role_teacher');
+  String get foundBody => _t('found_body');
+  String get engagementNew => _t('engagement_new');
+  String get engagementActive => _t('engagement_active');
+  String get engagementSlipping => _t('engagement_slipping');
+  String get engagementInactive => _t('engagement_inactive');
   String get successTitle => _t('success_title');
   String get successBody => _t('success_body');
   String get openStepix => _t('open_stepix');
@@ -227,6 +234,13 @@ class S {
       'phone_not_found_title': 'Raqam topilmadi',
       'found_student': 'O\'quvchi topildi',
       'found_teacher': 'O\'qituvchi topildi',
+      'role_student': 'O\'quvchi',
+      'role_teacher': 'O\'qituvchi',
+      'found_body': 'Raqam tasdiqlandi. Davom etib parolingizni kiriting.',
+      'engagement_new': 'Yangi',
+      'engagement_active': 'Faol',
+      'engagement_slipping': 'Sustlashdi',
+      'engagement_inactive': 'Nofaol',
       'success_title': 'Xush kelibsiz!',
       'success_body': 'Hammasi tayyor. Birinchi testni boshlaymizmi?',
       'open_stepix': 'Stepix\'ni ochish',
@@ -394,6 +408,13 @@ class S {
       'phone_not_found_title': 'Номер не найден',
       'found_student': 'Ученик найден',
       'found_teacher': 'Преподаватель найден',
+      'role_student': 'Ученик',
+      'role_teacher': 'Преподаватель',
+      'found_body': 'Номер подтверждён. Продолжите и введите пароль.',
+      'engagement_new': 'Новый',
+      'engagement_active': 'Активен',
+      'engagement_slipping': 'Слабеет',
+      'engagement_inactive': 'Неактивен',
       'success_title': 'Добро пожаловать!',
       'success_body': 'Всё готово. Начнём с первого теста?',
       'open_stepix': 'Открыть Stepix',
@@ -561,6 +582,13 @@ class S {
       'phone_not_found_title': 'Number not found',
       'found_student': 'Student found',
       'found_teacher': 'Teacher found',
+      'role_student': 'Student',
+      'role_teacher': 'Teacher',
+      'found_body': 'Number confirmed. Continue and enter your password.',
+      'engagement_new': 'New',
+      'engagement_active': 'Active',
+      'engagement_slipping': 'Slipping',
+      'engagement_inactive': 'Inactive',
       'success_title': 'Welcome!',
       'success_body': 'You are all set. Shall we start with the first test?',
       'open_stepix': 'Open Stepix',

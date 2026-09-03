@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'session_models.dart' show initialsOf;
 
 /// `GET /leaderboard` — top 20, scoped to the center, never platform-wide.
 ///
@@ -47,7 +48,10 @@ class LeaderRow {
         rank: asInt(j['rank']),
         userId: asString(j['user_id']),
         fullName: asString(j['full_name']),
-        initials: asString(j['initials']),
+        // Only `GET /student/group/:id` sends `initials`; every other endpoint
+        // sends the name alone, and reading a field that is not there drew a
+        // blank avatar next to every student.
+        initials: asStringOrNull(j['initials']) ?? initialsOf(asString(j['full_name'])),
         score: asInt(j['score']),
         tests: asInt(j['tests']),
         isMe: asBool(j['is_me']),
