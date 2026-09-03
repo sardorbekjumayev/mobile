@@ -322,8 +322,12 @@ class TeacherTest {
         subject: asString(j['subject']),
         groupNames: _groupNames(j),
         questionCount: asInt(j['question_count']),
-        submittedCount: asInt(j['submitted_count']),
-        assignedCount: asInt(j['assigned_count']),
+        // The endpoint calls them `submitted` and `assigned`; the model was
+        // reading `submitted_count` and `assigned_count`, which it has never
+        // sent — so every test card in the app showed "0/0 topshirdi" and an
+        // empty progress bar, including tests a whole group had finished.
+        submittedCount: asInt(j['submitted'] ?? j['submitted_count']),
+        assignedCount: asInt(j['assigned'] ?? j['assigned_count']),
         avgScore: asIntOrNull(j['avg_score']),
         dueAt: asDate(j['due_at']),
       );
@@ -347,7 +351,9 @@ class TeacherTest {
           .where((s) => s.isNotEmpty)
           .toList();
     }
-    final single = asStringOrNull(j['group_name']);
+    // `GET /teacher/test` sends one nested `group`, not a `group_name` — the
+    // card had no group to name under any of its tests.
+    final single = asStringOrNull(j['group_name']) ?? asStringOrNull(asMap(j['group'])['name']);
     return single == null ? const [] : [single];
   }
 }

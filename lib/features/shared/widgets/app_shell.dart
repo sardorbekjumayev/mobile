@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../core/session/session_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/strings.dart';
@@ -32,7 +34,11 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final brand = context.brand;
+    // The teacher app is violet throughout — the KPI tiles, the group icons,
+    // the register button. The bar alone read the center's own brand colour, so
+    // a teacher's selected tab glowed blue under a violet screen.
+    final teacher = context.watch<SessionController>().isTeacher;
+    final accent = teacher ? AppColors.violet : context.brand.primary;
 
     return Scaffold(
       // Deliberately *not* `extendBody`. A floating bar over the content looks
@@ -70,7 +76,7 @@ class AppShell extends StatelessWidget {
                       tab: tabs[i],
                       label: tabs[i].label(s),
                       selected: shell.currentIndex == i,
-                      color: brand.primary,
+                      color: accent,
                       // `initialLocation: true` on a re-tap pops the branch back
                       // to its root, which is what a second tap on the tab you
                       // are already in is asking for.

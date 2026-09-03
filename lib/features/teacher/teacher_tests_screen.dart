@@ -91,7 +91,13 @@ class TeacherTestCard extends StatelessWidget {
                     ),
                     Text(
                       [
-                        test.subject,
+                        // Centers name their groups after the subject —
+                        // "Matematika · 9-sinf" — so printing both gave every
+                        // card "Matematika · Matematika · 9-sinf". The group is
+                        // the more specific of the two; the subject earns its
+                        // place only when the group does not already say it.
+                        if (test.groupNames.every((g) => !g.contains(test.subject)))
+                          test.subject,
                         ...test.groupNames,
                         '${test.questionCount} ${s.questions}',
                       ].where((e) => e.isNotEmpty).join(' · '),

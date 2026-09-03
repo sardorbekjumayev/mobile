@@ -443,6 +443,119 @@ void main() {
     await goTo(tester, '/student/test/t1/run');
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('test_runner.png'));
   });
+  testWidgets('student group detail', (tester) async {
+    Map<String, dynamic> mate(String id, String name, String initials, {bool me = false}) =>
+        {'id': id, 'full_name': name, 'initials': initials, 'is_me': me};
+
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(),
+        'GET /settings': settingsJson,
+        'GET /home': {'greeting': 'day', 'metrics': [], 'week': []},
+        'GET /group': const [],
+        'GET /group/g1': {
+          'id': 'g1',
+          'name': 'IELTS Evening',
+          'subject': 'Ingliz tili',
+          'level': 'B2',
+          'room': '204',
+          'schedule': [
+            {'day': 1, 'start': '18:00', 'end': '19:30'},
+            {'day': 4, 'start': '18:00', 'end': '19:30'},
+          ],
+          'teacher': {'id': 'u9', 'full_name': 'Kamola Tashpulatova'},
+          'classmates': [
+            mate('u1', 'Ali Valiyev', 'AV', me: true),
+            mate('u2', 'Zarina Ergasheva', 'ZE'),
+            mate('u3', 'Sardor Nazarov', 'SN'),
+          ],
+        },
+      }),
+    );
+    await goTo(tester, '/student/group/g1');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('student_group.png'));
+  });
+
+  testWidgets('teacher tests', (tester) async {
+    Map<String, dynamic> test(
+      String id,
+      String title,
+      int assigned,
+      int submitted,
+      int? avg,
+    ) =>
+        {
+          'id': id,
+          'title': title,
+          'subject': 'Matematika',
+          'group': {'id': 'g1', 'name': 'Matematika · 9-sinf'},
+          'question_count': 20,
+          'due_at': null,
+          'state': 'ready',
+          'assigned': assigned,
+          'submitted': submitted,
+          'avg_score': avg,
+        };
+
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(role: 'teacher'),
+        'GET /settings': settingsJson,
+        'GET /teacher/home': {'kpis': {}, 'attention': []},
+        'GET /teacher/group': const [],
+        'GET /teacher/test': [
+          test('t1', 'Natural sonlar', 11, 9, 76),
+          test('t2', 'Uchburchaklar', 11, 0, null),
+        ],
+      }),
+    );
+    await tester.tap(find.text('Testlar').last);
+    await tester.pumpAndSettle();
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('teacher_tests.png'));
+  });
+
+  testWidgets('notifications', (tester) async {
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(),
+        'GET /settings': settingsJson,
+        'GET /home': {'greeting': 'day', 'metrics': [], 'week': []},
+        'GET /group': const [],
+        'GET /notification': {
+          'total': 2,
+          'unread': 1,
+          'data': [
+            {
+              'id': 'n1',
+              'type': 'test_assigned',
+              'title': 'Yangi test',
+              'body': 'IELTS Evening guruhiga "Present tenses" tayinlandi.',
+              'ref_id': 't1',
+              'is_read': false,
+              'created_at': '2026-09-03T06:10:00.000Z',
+            },
+            {
+              'id': 'n2',
+              'type': 'result_ready',
+              'title': 'Natija tayyor',
+              'body': '"Past simple" testidan 88 ball oldingiz.',
+              'ref_id': 't3',
+              'is_read': true,
+              'created_at': '2026-09-01T15:40:00.000Z',
+            },
+          ],
+        },
+      }),
+    );
+    await goTo(tester, '/notifications');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('notifications.png'));
+  });
 }
 
 /// Drives the app's own router to a pushed route.
