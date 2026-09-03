@@ -115,9 +115,9 @@ class TeacherGroup {
     required this.subject,
     required this.level,
     required this.studentsCount,
-    required this.avgScore,
-    required this.attendancePct,
     required this.schedule,
+    this.avgScore,
+    this.attendancePct,
     this.room,
   });
 
@@ -127,8 +127,12 @@ class TeacherGroup {
         subject: asString(j['subject']),
         level: asString(j['level']),
         studentsCount: asInt(j['students_count']),
-        avgScore: asInt(j['avg_score']),
-        attendancePct: asInt(j['attendance_pct']),
+        // Both nullable, and both mean "nothing to average yet" rather than
+        // zero: a group with no submitted test has no average, and one whose
+        // register has never been marked has no attendance. Reading them as
+        // `asInt` printed "0" and "0%" for every new group in the center.
+        avgScore: asIntOrNull(j['avg_score']),
+        attendancePct: asIntOrNull(j['attendance_pct']),
         schedule: mapList(j['schedule'], ScheduleSlot.fromJson),
         room: asStringOrNull(j['room']),
       );
@@ -138,9 +142,9 @@ class TeacherGroup {
   final String subject;
   final String level;
   final int studentsCount;
-  final int avgScore;
-  final int attendancePct;
   final List<ScheduleSlot> schedule;
+  final int? avgScore;
+  final int? attendancePct;
   final String? room;
 }
 

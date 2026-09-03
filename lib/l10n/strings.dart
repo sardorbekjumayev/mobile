@@ -28,6 +28,9 @@ class S {
   String get statStudents => _t('stat_students');
   String get statTests => _t('stat_tests');
   String get statCenters => _t('stat_centers');
+  String get rankedOf => _t('ranked_of');
+  String get levelSuffix => _t('level_suffix');
+  String get roomSuffix => _t('room_suffix');
   String get phoneTitle => _t('phone_title');
   String get phoneBody => _t('phone_body');
   String get phoneHint => _t('phone_hint');
@@ -226,6 +229,9 @@ class S {
       'stat_students': 'o\'quvchi',
       'stat_tests': 'test',
       'stat_centers': 'markaz',
+      'ranked_of': 'o\'quvchi ichida',
+      'level_suffix': 'daraja',
+      'room_suffix': 'xona',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
       'phone_hint': 'Hisobni o\'quv markaz ochadi',
@@ -334,7 +340,7 @@ class S {
       'no_teacher_tests': 'Guruhlaringiz uchun hali test tuzilmagan. Testlarni markaz administratori tayyorlaydi.',
       'open': 'Ochish',
       'ok': 'Ok',
-      'progress': 'Progress',
+      'progress': 'Ballar o\'sishi',
       'groups': 'Guruhlar',
       'attendance': 'Davomat',
       'present': 'Keldi',
@@ -403,6 +409,9 @@ class S {
       'stat_students': 'учеников',
       'stat_tests': 'тестов',
       'stat_centers': 'центров',
+      'ranked_of': 'учеников в рейтинге',
+      'level_suffix': 'уровень',
+      'room_suffix': 'кабинет',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
       'phone_hint': 'Аккаунт создаёт центр',
@@ -580,6 +589,9 @@ class S {
       'stat_students': 'students',
       'stat_tests': 'tests',
       'stat_centers': 'centers',
+      'ranked_of': 'students ranked',
+      'level_suffix': 'level',
+      'room_suffix': 'room',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
       'phone_hint': 'Your center creates the account',

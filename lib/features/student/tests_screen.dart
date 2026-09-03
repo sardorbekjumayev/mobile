@@ -36,9 +36,15 @@ class _StudentTestsScreenState extends State<StudentTestsScreen> {
           final done = await repo.tests(state: TestState.submitted);
           return done.items;
         }
-        final assigned = await repo.tests(state: TestState.assigned);
-        final started = await repo.tests(state: TestState.inProgress);
-        return [...started.items, ...assigned.items];
+        // Two states, one tab, and the two reads do not depend on each other —
+        // awaiting them in sequence made the pending tab take two round trips
+        // of waiting where it needs one. Started tests come first: a test the
+        // student has already opened is the one they came back for.
+        final pages = await Future.wait([
+          repo.tests(state: TestState.inProgress),
+          repo.tests(state: TestState.assigned),
+        ]);
+        return [for (final page in pages) ...page.items];
       },
       builder: (context, tests, refresh) => ListView(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),

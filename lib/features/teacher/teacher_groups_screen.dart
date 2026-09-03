@@ -75,10 +75,14 @@ class _GroupCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      [group.subject, group.level, group.room]
-                          .whereType<String>()
-                          .where((e) => e.isNotEmpty)
-                          .join(' · '),
+                      // The room needs its noun. "Matematika · 9 · 301" reads as
+                      // three unrelated numbers; "301-xona" is a room.
+                      [
+                        group.subject,
+                        if (group.level.isNotEmpty) '${group.level}-${s.levelSuffix}',
+                        if (group.room != null && group.room!.isNotEmpty)
+                          '${group.room}-${s.roomSuffix}',
+                      ].where((e) => e.isNotEmpty).join(' · '),
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 11.5, color: AppColors.faint),
                     ),
@@ -87,8 +91,8 @@ class _GroupCard extends StatelessWidget {
               ),
               StatusChip(
                 label: '${group.avgScore}',
-                background: group.avgScore < 60 ? AppColors.clayTint : AppColors.greenTint,
-                foreground: group.avgScore < 60 ? AppColors.clay : AppColors.green,
+                background: (group.avgScore ?? 0) < 60 ? AppColors.clayTint : AppColors.greenTint,
+                foreground: (group.avgScore ?? 0) < 60 ? AppColors.clay : AppColors.green,
               ),
             ],
           ),
@@ -97,9 +101,19 @@ class _GroupCard extends StatelessWidget {
             children: [
               Expanded(child: _Stat(value: '${group.studentsCount}', label: s.students)),
               const SizedBox(width: 9),
-              Expanded(child: _Stat(value: '${group.attendancePct}%', label: s.attendance)),
+              Expanded(
+                child: _Stat(
+                  value: group.attendancePct == null ? '—' : '${group.attendancePct}%',
+                  label: s.attendance,
+                ),
+              ),
               const SizedBox(width: 9),
-              Expanded(child: _Stat(value: '${group.avgScore}', label: s.avgScore)),
+              Expanded(
+                child: _Stat(
+                  value: group.avgScore == null ? '—' : '${group.avgScore}',
+                  label: s.avgScore,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -165,11 +179,20 @@ class _Stat extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 17),
           ),
           const SizedBox(height: 2),
+          // Two lines, and no letter-spacing. Three of these share a phone's
+          // width, and "O'RTACHA BALL" — the longest label and the one that
+          // matters most — clipped to "O'RTACHA BA…" on every card. Wrapping is
+          // better than a label the reader has to guess at.
           Text(
             label.toUpperCase(),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 9.5, letterSpacing: 0.3, color: AppColors.faint2),
+            style: const TextStyle(
+              fontSize: 9,
+              height: 1.25,
+              fontWeight: FontWeight.w600,
+              color: AppColors.faint2,
+            ),
           ),
         ],
       ),

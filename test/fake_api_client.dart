@@ -50,6 +50,10 @@ class FakeApiClient implements ApiClient {
     }
     final value = responses[key];
     if (value is ApiException) throw value;
+    // A stub may be a function of the request, which is the only way to model
+    // an endpoint whose answer depends on its query — `GET /test?state=…` is
+    // one call site with three different answers.
+    if (value is dynamic Function(Object?)) return value(body);
     return value;
   }
 }

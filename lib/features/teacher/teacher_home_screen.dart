@@ -368,11 +368,14 @@ class _AveragesCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(Radius.circular(99)),
                       child: LinearProgressIndicator(
-                        value: group.avgScore / 100,
+                        // A group with no submitted test draws an empty track
+                        // rather than a bar at zero — "nobody has taken it yet"
+                        // and "everyone scored nothing" are different facts.
+                        value: (group.avgScore ?? 0) / 100,
                         minHeight: 8,
                         backgroundColor: AppColors.track,
                         valueColor: AlwaysStoppedAnimation(
-                          group.avgScore < 60 ? AppColors.clay : AppColors.violet,
+                          (group.avgScore ?? 100) < 60 ? AppColors.clay : AppColors.violet,
                         ),
                       ),
                     ),
@@ -381,7 +384,7 @@ class _AveragesCard extends StatelessWidget {
                   SizedBox(
                     width: 26,
                     child: Text(
-                      '${group.avgScore}',
+                      group.avgScore == null ? '—' : '${group.avgScore}',
                       textAlign: TextAlign.right,
                       style: const TextStyle(
                         fontSize: 12,

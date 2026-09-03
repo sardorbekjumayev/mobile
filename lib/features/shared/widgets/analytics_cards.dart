@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../data/models/student_models.dart';
@@ -64,7 +65,7 @@ class TrendCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            point.month.length >= 7 ? point.month.substring(5) : point.month,
+                            monthLabel(point.month),
                             style: const TextStyle(fontSize: 9.5, color: AppColors.faint2),
                           ),
                         ],
@@ -168,4 +169,18 @@ class _SkillRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// `2026-07` → `Iyul`, in the user's own language.
+///
+/// The axis used to read `07`. A bare two-digit number under a bar is not a
+/// month label — it is the substring that happened to be left after cutting the
+/// year off, and it means nothing to the student reading it.
+String monthLabel(String raw) {
+  final parts = raw.split('-');
+  if (parts.length < 2) return raw;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  if (year == null || month == null || month < 1 || month > 12) return raw;
+  return DateFormat.MMM().format(DateTime(year, month));
 }

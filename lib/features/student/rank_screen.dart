@@ -108,10 +108,15 @@ class _MyRankCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
+                  // `total_ranked` is how many students are in the ranking, not
+                  // how many tests anyone took — it was labelled "test", which
+                  // turned "you are 4th of 26 students" into "26 tests".
                   ranked
-                      ? '${board.myScore ?? 0} · ${board.totalRanked} '
-                          '${s.testsTaken}'
-                          '${board.gapToNext != null ? ' · ${s.gapToNext} ${board.gapToNext}' : ''}'
+                      ? [
+                          '${board.myScore ?? 0}',
+                          '${board.totalRanked} ${s.rankedOf}',
+                          if (board.gapToNext != null) '${s.gapToNext} ${board.gapToNext}',
+                        ].join(' · ')
                       : s.unrankedNote,
                   style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
                 ),
