@@ -12,9 +12,11 @@ import '../shared/widgets/primitives.dart';
 
 /// M17 — `GET /teacher/test`.
 ///
-/// Read-only by design: a teacher sees what was assigned to their groups and
-/// how it is going, but tests are built in the center panel. The one write in
-/// the teacher app is the attendance register.
+/// A teacher sees what their groups were assigned, how far the submissions have
+/// got — and builds their own from here. The button is a floating one rather
+/// than a row in the list because the list is the answer to "how is it going",
+/// and making a test is a different errand that should not have to be scrolled
+/// to past forty cards.
 class TeacherTestsScreen extends StatelessWidget {
   const TeacherTestsScreen({super.key});
 
@@ -23,6 +25,31 @@ class TeacherTestsScreen extends StatelessWidget {
     final s = S.of(context);
     final repo = context.read<TeacherRepository>();
 
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'create-test',
+        backgroundColor: AppColors.violet,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+        label: Text(
+          s.createTest,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        onPressed: () => context.push('/teacher/create-test'),
+      ),
+      body: _Body(repo: repo, s: s),
+    );
+  }
+}
+
+class _Body extends StatelessWidget {
+  const _Body({required this.repo, required this.s});
+
+  final TeacherRepository repo;
+  final S s;
+
+  @override
+  Widget build(BuildContext context) {
     return AsyncView<List<TeacherTest>>(
       load: repo.tests,
       builder: (context, tests, refresh) => ListView(
@@ -43,6 +70,9 @@ class TeacherTestsScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: TeacherTestCard(test: test),
               ),
+          // Room for the floating button, so the last card is not hidden under
+          // it at the bottom of the scroll.
+          const SizedBox(height: 64),
         ],
       ),
     );

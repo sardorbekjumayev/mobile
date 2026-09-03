@@ -49,6 +49,7 @@ class BrandButton extends StatelessWidget {
     this.busy = false,
     this.icon,
     this.expand = true,
+    this.accent,
   });
 
   final String label;
@@ -57,9 +58,19 @@ class BrandButton extends StatelessWidget {
   final IconData? icon;
   final bool expand;
 
+  /// Overrides the center's brand colour.
+  ///
+  /// The teacher half of the app is violet throughout, and a blue primary
+  /// button at the bottom of a violet screen is the one element that did not
+  /// get the memo.
+  final Color? accent;
+
   @override
   Widget build(BuildContext context) {
-    final brand = context.brand;
+    final base = context.brand;
+    final brand = accent == null
+        ? base
+        : BrandColors(primary: accent!, dark: Color.lerp(accent!, Colors.black, 0.22)!);
     final enabled = onPressed != null && !busy;
 
     return Opacity(

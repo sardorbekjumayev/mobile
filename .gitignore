@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Golden failures are diagnostic output, not source: `flutter test` writes
+# the expected/actual/diff triple here on a mismatch and it is regenerated
+# every run.
+test/goldens/failures/

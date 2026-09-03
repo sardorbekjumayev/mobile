@@ -34,6 +34,25 @@ class S {
   String get questionsLabel => _t('questions_label');
   String get timeLimitLabel => _t('time_limit_label');
   String get attemptsLabel => _t('attempts_label');
+  String get createTest => _t('create_test');
+  String get pickTopic => _t('pick_topic');
+  String get pickGroups => _t('pick_groups');
+  String get difficulty => _t('difficulty');
+  String get difficultyEasy => _t('difficulty_easy');
+  String get difficultyMixed => _t('difficulty_mixed');
+  String get difficultyHard => _t('difficulty_hard');
+  String get mixPrior => _t('mix_prior');
+  String get mixPriorHint => _t('mix_prior_hint');
+  String get generate => _t('generate');
+  String get generating => _t('generating');
+  String get generatingHint => _t('generating_hint');
+  String get generationFailed => _t('generation_failed');
+  String get testReady => _t('test_ready');
+  String get quotaLeft => _t('quota_left');
+  String get quotaExhausted => _t('quota_exhausted');
+  String get noProgram => _t('no_program');
+  String get openTest => _t('open_test');
+  String get studentsLower => _t('students_lower');
   String get phoneTitle => _t('phone_title');
   String get phoneBody => _t('phone_body');
   String get phoneHint => _t('phone_hint');
@@ -238,6 +257,25 @@ class S {
       'questions_label': 'Savollar',
       'time_limit_label': 'Vaqt chegarasi',
       'attempts_label': 'Qolgan urinishlar',
+      'create_test': 'Test tuzish',
+      'pick_topic': 'Mavzu',
+      'pick_groups': 'Guruhlar',
+      'difficulty': 'Murakkablik',
+      'difficulty_easy': 'Oson',
+      'difficulty_mixed': 'Aralash',
+      'difficulty_hard': 'Qiyin',
+      'mix_prior': 'Oldingi mavzular bilan aralashtirish',
+      'mix_prior_hint': 'Savollarning uchdan biri shu bo\'limdagi oldin o\'tilgan mavzulardan olinadi.',
+      'generate': 'Testni yaratish',
+      'generating': 'Test tayyorlanmoqda',
+      'generating_hint': 'Bu odatda 10–40 soniya oladi. Ekranni yopsangiz ham to\'xtamaydi.',
+      'generation_failed': 'Test yaratilmadi. Qayta urinib ko\'ring.',
+      'test_ready': 'Test tayyor',
+      'quota_left': 'Bu oyga qolgan',
+      'quota_exhausted': 'Bu oyga berilgan limit tugadi. O\'quv markazingizdan oshirishni so\'rang.',
+      'no_program': 'Sizga fan biriktirilmagan. O\'quv markazingizga murojaat qiling.',
+      'open_test': 'Testni ochish',
+      'students_lower': 'o\'quvchi',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
       'phone_hint': 'Hisobni o\'quv markaz ochadi',
@@ -421,6 +459,25 @@ class S {
       'questions_label': 'Вопросов',
       'time_limit_label': 'Ограничение времени',
       'attempts_label': 'Осталось попыток',
+      'create_test': 'Создать тест',
+      'pick_topic': 'Тема',
+      'pick_groups': 'Группы',
+      'difficulty': 'Сложность',
+      'difficulty_easy': 'Лёгкий',
+      'difficulty_mixed': 'Смешанный',
+      'difficulty_hard': 'Сложный',
+      'mix_prior': 'Смешать с пройденными темами',
+      'mix_prior_hint': 'Треть вопросов возьмётся из ранее пройденных тем этого раздела.',
+      'generate': 'Создать тест',
+      'generating': 'Тест готовится',
+      'generating_hint': 'Обычно 10–40 секунд. Можно закрыть экран — не остановится.',
+      'generation_failed': 'Тест не создан. Попробуйте ещё раз.',
+      'test_ready': 'Тест готов',
+      'quota_left': 'Осталось в этом месяце',
+      'quota_exhausted': 'Лимит на этот месяц исчерпан. Попросите учебный центр увеличить его.',
+      'no_program': 'Вам не назначен предмет. Обратитесь в учебный центр.',
+      'open_test': 'Открыть тест',
+      'students_lower': 'учеников',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
       'phone_hint': 'Аккаунт создаёт центр',
@@ -604,6 +661,25 @@ class S {
       'questions_label': 'Questions',
       'time_limit_label': 'Time limit',
       'attempts_label': 'Attempts left',
+      'create_test': 'Create a test',
+      'pick_topic': 'Topic',
+      'pick_groups': 'Groups',
+      'difficulty': 'Difficulty',
+      'difficulty_easy': 'Easy',
+      'difficulty_mixed': 'Mixed',
+      'difficulty_hard': 'Hard',
+      'mix_prior': 'Mix with earlier topics',
+      'mix_prior_hint': 'A third of the questions come from topics already covered in this branch.',
+      'generate': 'Generate the test',
+      'generating': 'Building your test',
+      'generating_hint': 'Usually 10-40 seconds. It keeps going if you close this screen.',
+      'generation_failed': 'The test was not created. Try again.',
+      'test_ready': 'Test ready',
+      'quota_left': 'Left this month',
+      'quota_exhausted': 'You have used this month\'s limit. Ask your learning center to raise it.',
+      'no_program': 'You have no subject assigned. Ask your learning center.',
+      'open_test': 'Open the test',
+      'students_lower': 'students',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
       'phone_hint': 'Your center creates the account',

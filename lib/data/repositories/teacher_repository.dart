@@ -27,6 +27,50 @@ class TeacherRepository {
   Future<TeacherTestDetail> test(String id) async =>
       TeacherTestDetail.fromJson(asMap(await _api.get('/teacher/test/$id')));
 
+  // ── test creation ──────────────────────────────────────────────────
+
+  /// The teacher's own subject, its branches and their topics — one call, where
+  /// the center panel drills down through three.
+  Future<TeacherProgram> program() async =>
+      TeacherProgram.fromJson(asMap(await _api.get('/teacher/program')));
+
+  /// This month's generation allowance. Read before the form is drawn.
+  Future<TeacherQuota> quota() async =>
+      TeacherQuota.fromJson(asMap(await _api.get('/teacher/quota')));
+
+  /// Queues a generation and returns the job to poll.
+  ///
+  /// The server refuses a group that is not this teacher's with `20713`, and a
+  /// teacher who has spent their allowance with `20712` — both carry a message
+  /// the screen can show as-is.
+  Future<GenerationJob> generate({
+    required String topicId,
+    required List<String> groupIds,
+    required int questionCount,
+    required TestDifficulty difficulty,
+    required int timeLimitMin,
+    int? passScore,
+    bool mixPrior = false,
+    DateTime? dueAt,
+  }) async {
+    final data = await _api.post('/teacher/test/generate', body: {
+      'topic_id': topicId,
+      'group_ids': groupIds,
+      'question_count': questionCount,
+      'difficulty': difficulty.wire,
+      'time_limit_min': timeLimitMin,
+      'pass_score': ?passScore,
+      'mix_prior': mixPrior,
+      if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+    });
+    return GenerationJob.started(asMap(data));
+  }
+
+  Future<GenerationJob> generationState(String jobId) async => GenerationJob.polled(
+        asMap(await _api.get('/teacher/test/generate/$jobId')),
+        jobId,
+      );
+
   /// The one write a teacher makes. Upserts on
   /// `(group_id, student_id, lesson_date)`, so re-submitting the register
   /// corrects it instead of failing — which is what a teacher who mis-tapped

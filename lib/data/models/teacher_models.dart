@@ -427,3 +427,152 @@ class AttendanceMark {
 
   Map<String, dynamic> toJson() => {'student_id': studentId, 'status': status.wire};
 }
+
+// ── test creation ────────────────────────────────────────────────────────
+
+/// `GET /teacher/program` — the teacher's own subject, its branches and their
+/// topics, in one call.
+class TeacherProgram {
+  const TeacherProgram({required this.subjectName, required this.branches});
+
+  factory TeacherProgram.fromJson(Map<String, dynamic> j) => TeacherProgram(
+        subjectName: asString(asMap(j['subject'])['name']),
+        branches: mapList(j['branches'], ProgramBranch.fromJson),
+      );
+
+  final String subjectName;
+  final List<ProgramBranch> branches;
+
+  bool get isEmpty => branches.every((b) => b.topics.isEmpty);
+}
+
+class ProgramBranch {
+  const ProgramBranch({
+    required this.id,
+    required this.name,
+    required this.topics,
+    this.hint,
+  });
+
+  factory ProgramBranch.fromJson(Map<String, dynamic> j) => ProgramBranch(
+        id: asString(j['id']),
+        name: asString(j['name']),
+        hint: asStringOrNull(j['hint']),
+        topics: mapList(j['topics'], ProgramTopic.fromJson),
+      );
+
+  final String id;
+  final String name;
+  final String? hint;
+  final List<ProgramTopic> topics;
+}
+
+class ProgramTopic {
+  const ProgramTopic({
+    required this.id,
+    required this.position,
+    required this.name,
+    required this.isCustom,
+    this.hint,
+  });
+
+  factory ProgramTopic.fromJson(Map<String, dynamic> j) => ProgramTopic(
+        id: asString(j['id']),
+        position: asInt(j['position']),
+        name: asString(j['name']),
+        hint: asStringOrNull(j['hint']),
+        isCustom: asBool(j['is_custom']),
+      );
+
+  final String id;
+  final int position;
+  final String name;
+  final String? hint;
+
+  /// Written by this center rather than seeded by the platform.
+  final bool isCustom;
+}
+
+/// `GET /teacher/quota` — this month's generation allowance.
+///
+/// Generating spends the center's AI budget, so the center caps how much of it
+/// one teacher can spend. Read before the form is drawn, not after it is filled
+/// in.
+class TeacherQuota {
+  const TeacherQuota({
+    required this.used,
+    required this.limit,
+    required this.remaining,
+    this.resetsAt,
+  });
+
+  factory TeacherQuota.fromJson(Map<String, dynamic> j) => TeacherQuota(
+        used: asInt(j['used']),
+        limit: asInt(j['limit']),
+        remaining: asInt(j['remaining']),
+        resetsAt: asDate(j['resets_at']),
+      );
+
+  final int used;
+  final int limit;
+  final int remaining;
+  final DateTime? resetsAt;
+
+  bool get isExhausted => remaining <= 0;
+}
+
+/// How hard the questions should be. The server's own three values.
+enum TestDifficulty {
+  easy,
+  mixed,
+  hard;
+
+  String get wire => name;
+}
+
+/// `POST /teacher/test/generate`, then `GET /teacher/test/generate/:job_id`.
+class GenerationJob {
+  const GenerationJob({
+    required this.jobId,
+    required this.testId,
+    required this.state,
+    required this.progress,
+    this.title,
+    this.error,
+    this.estimatedSec,
+  });
+
+  factory GenerationJob.started(Map<String, dynamic> j) => GenerationJob(
+        jobId: asString(j['job_id']),
+        testId: asString(j['test_id']),
+        state: asString(j['state'], 'queued'),
+        progress: 0,
+        estimatedSec: asIntOrNull(j['estimated_sec']),
+      );
+
+  factory GenerationJob.polled(Map<String, dynamic> j, String jobId) => GenerationJob(
+        jobId: jobId,
+        testId: asString(j['test_id']),
+        state: asString(j['state'], 'queued'),
+        progress: asDouble(j['progress']),
+        title: asStringOrNull(j['title']),
+        error: asStringOrNull(j['error']),
+      );
+
+  final String jobId;
+  final String testId;
+  final String state;
+
+  /// `0..1`, straight from the job.
+  final double progress;
+  final String? title;
+  final String? error;
+
+  /// The server's own estimate, used to pace the progress bar between polls
+  /// rather than leaving it frozen at 35% for twenty seconds.
+  final int? estimatedSec;
+
+  bool get isDone => state == 'ready';
+
+  bool get isFailed => state == 'failed';
+}

@@ -23,6 +23,7 @@ import '../features/student/test_result_screen.dart';
 import '../features/student/test_runner_screen.dart';
 import '../features/student/tests_screen.dart';
 import '../features/teacher/attendance_screen.dart';
+import '../features/teacher/create_test_screen.dart';
 import '../features/teacher/student_detail_screen.dart';
 import '../features/teacher/teacher_group_detail_screen.dart';
 import '../features/teacher/teacher_groups_screen.dart';
@@ -171,6 +172,13 @@ GoRouter createRouter({
       GoRoute(
         path: '/teacher/student/:id',
         builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!),
+      ),
+      // Not `/teacher/test/create`: that would match `/teacher/test/:id` with
+      // an id of "create", and which of the two won would depend on the order
+      // of this list.
+      GoRoute(
+        path: '/teacher/create-test',
+        builder: (context, state) => const CreateTestScreen(),
       ),
       GoRoute(
         path: '/teacher/test/:id',

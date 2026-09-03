@@ -556,6 +556,58 @@ void main() {
     await goTo(tester, '/notifications');
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('notifications.png'));
   });
+  testWidgets('create test', (tester) async {
+    Map<String, dynamic> topic(String id, int position, String name) =>
+        {'id': id, 'position': position, 'name': name, 'hint': null, 'is_custom': false};
+
+    await pumpApp(
+      tester,
+      tokens: signedInTokens,
+      api: FakeApiClient({
+        'GET /auth/me': identityJson(role: 'teacher'),
+        'GET /settings': settingsJson,
+        'GET /teacher/home': {'kpis': {}, 'attention': []},
+        // Copied from `GET /v1/teacher/program` on the running server.
+        'GET /teacher/program': {
+          'subject': {'id': 's1', 'name': 'Matematika'},
+          'branches': [
+            {
+              'id': 'b1',
+              'name': 'Arifmetika',
+              'hint': null,
+              'stage': 1,
+              'topics': [
+                topic('t1', 1, 'Natural sonlar'),
+                topic('t2', 2, 'Oddiy kasrlar'),
+              ],
+            },
+          ],
+        },
+        'GET /teacher/quota': {
+          'used': 3,
+          'limit': 20,
+          'remaining': 17,
+          'resets_at': '2026-10-01T00:00:00.000Z',
+        },
+        'GET /teacher/group': [
+          {
+            'id': 'g1',
+            'name': 'Matematika · 9-sinf',
+            'subject': 'Matematika',
+            'level': '9',
+            'room': '301',
+            'schedule': const [],
+            'capacity': 15,
+            'students_count': 11,
+            'avg_score': 74,
+            'attendance_pct': 88,
+          },
+        ],
+      }),
+    );
+    await goTo(tester, '/teacher/create-test');
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('create_test.png'));
+  });
 }
 
 /// Drives the app's own router to a pushed route.
