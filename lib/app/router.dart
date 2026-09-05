@@ -18,6 +18,7 @@ import '../features/shared/widgets/app_shell.dart';
 import '../features/student/group_detail_screen.dart';
 import '../features/student/home_screen.dart';
 import '../features/student/rank_screen.dart';
+import '../features/student/student_practice_screen.dart';
 import '../features/student/test_cover_screen.dart';
 import '../features/student/test_result_screen.dart';
 import '../features/student/test_runner_screen.dart';
@@ -143,6 +144,10 @@ GoRouter createRouter({
         path: '/student/group/:id',
         builder: (context, state) =>
             StudentGroupDetailScreen(groupId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/student/practice',
+        builder: (context, state) => const StudentPracticeScreen(),
       ),
       GoRoute(
         path: '/student/test/:id',

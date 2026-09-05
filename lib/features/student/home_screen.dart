@@ -7,6 +7,7 @@ import '../../core/theme/tokens.dart';
 import '../../data/models/student_models.dart';
 import '../../data/repositories/student_repository.dart';
 import '../../l10n/strings.dart';
+import '../shared/widgets/analytics_cards.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
 import '../shared/widgets/user_header.dart';
@@ -69,6 +70,17 @@ class _HomeBody extends StatelessWidget {
           _NextTestCard(test: home.nextTest),
           const SizedBox(height: 12),
           _StatsRow(home: home),
+          if (home.advice != null) ...[
+            const SizedBox(height: 12),
+            AdviceCard(advice: home.advice!),
+          ],
+          const SizedBox(height: 10),
+          Center(
+            child: GhostButton(
+              label: s.createPracticeTest,
+              onPressed: () => context.push('/student/practice'),
+            ),
+          ),
           const SizedBox(height: 12),
           _WeekCard(week: home.week),
           if (bundle.groups.isNotEmpty) ...[

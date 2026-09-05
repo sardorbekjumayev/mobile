@@ -85,6 +85,7 @@ class StudentHome {
     required this.week,
     this.nextTest,
     this.rank,
+    this.advice,
     this.emptyState,
   });
 
@@ -97,6 +98,7 @@ class StudentHome {
         week: mapList(j['week'], WeekDay.fromJson),
         nextTest: j['next_test'] == null ? null : TestSummary.fromJson(asMap(j['next_test'])),
         rank: asIntOrNull(j['rank']),
+        advice: asStringOrNull(j['advice']),
         emptyState: asStringOrNull(j['empty_state']),
       );
 
@@ -108,6 +110,11 @@ class StudentHome {
   final List<WeekDay> week;
   final TestSummary? nextTest;
   final int? rank;
+
+  /// AI-generated, cached 24h — the same sentence a teacher would see about
+  /// this student, just addressed to them directly. Null until there's
+  /// enough submitted history to say anything.
+  final String? advice;
 
   /// `"no_group"` when the center has not placed the student in a group yet.
   /// The most common state for a brand-new account, and the least worth
@@ -281,6 +288,20 @@ class StudentGroupDetail {
   final StudentGroup group;
   final List<Classmate> classmates;
   final List<TestSummary> tests;
+}
+
+// ── practice papers ──────────────────────────────────────────────────────
+
+/// `GET /practice/subjects` — one entry per subject the student is enrolled
+/// in through one of their groups.
+class PracticeSubject {
+  const PracticeSubject({required this.id, required this.name});
+
+  factory PracticeSubject.fromJson(Map<String, dynamic> j) =>
+      PracticeSubject(id: asString(j['id']), name: asString(j['name']));
+
+  final String id;
+  final String name;
 }
 
 class Classmate {

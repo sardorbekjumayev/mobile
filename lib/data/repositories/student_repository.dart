@@ -4,6 +4,8 @@ import '../../core/util/json.dart';
 import '../models/exam_models.dart';
 import '../models/rank_models.dart';
 import '../models/student_models.dart';
+import '../models/teacher_models.dart'
+    show TestDifficulty, TeacherProgram, TeacherQuota, GenerationJob;
 
 class StudentRepository {
   const StudentRepository(this._api);
@@ -74,4 +76,38 @@ class StudentRepository {
       Leaderboard.fromJson(asMap(await _api.get('/leaderboard')));
 
   Future<List<Badge>> badges() async => mapList(await _api.get('/badge'), Badge.fromJson);
+
+  // ── practice papers ───────────────────────────────────────────────
+
+  /// Subjects I can practice — one per group I'm enrolled in.
+  Future<List<PracticeSubject>> practiceSubjects() async =>
+      mapList(await _api.get('/practice/subjects'), PracticeSubject.fromJson);
+
+  /// Branches and topics for one subject — same shape as the teacher's
+  /// `program()`, so the same topic-picker sheet works for both.
+  Future<TeacherProgram> practiceProgram(String subjectId) async => TeacherProgram.fromJson(
+        asMap(await _api.get('/practice/program', query: {'subject_id': subjectId})),
+      );
+
+  /// This month's practice-paper allowance.
+  Future<TeacherQuota> practiceQuota() async =>
+      TeacherQuota.fromJson(asMap(await _api.get('/practice/quota')));
+
+  Future<GenerationJob> generatePractice({
+    required String topicId,
+    required int questionCount,
+    TestDifficulty? difficulty,
+  }) async {
+    final data = await _api.post('/practice/generate', body: {
+      'topic_id': topicId,
+      'question_count': questionCount,
+      if (difficulty != null) 'difficulty': difficulty.wire,
+    });
+    return GenerationJob.started(asMap(data));
+  }
+
+  Future<GenerationJob> practiceGenerationState(String jobId) async => GenerationJob.polled(
+        asMap(await _api.get('/practice/generate/$jobId')),
+        jobId,
+      );
 }

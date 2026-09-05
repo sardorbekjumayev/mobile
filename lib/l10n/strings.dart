@@ -64,6 +64,9 @@ class S {
   String get noProgram => _t('no_program');
   String get openTest => _t('open_test');
   String get studentsLower => _t('students_lower');
+  String get practiceTest => _t('practice_test');
+  String get createPracticeTest => _t('create_practice_test');
+  String get pickSubject => _t('pick_subject');
   String get addBranch => _t('add_branch');
   String get addTopic => _t('add_topic');
   String get newBranchTitle => _t('new_branch_title');
@@ -321,6 +324,9 @@ class S {
       'no_program': 'Sizga fan biriktirilmagan. O\'quv markazingizga murojaat qiling.',
       'open_test': 'Testni ochish',
       'students_lower': 'o\'quvchi',
+      'practice_test': 'Mashq testi',
+      'create_practice_test': 'Mashq testi yaratish',
+      'pick_subject': 'Fan',
       'add_branch': '+ Yangi bo\'lim',
       'add_topic': '+ Yangi mavzu',
       'new_branch_title': 'Yangi bo\'lim',
@@ -557,6 +563,9 @@ class S {
       'no_program': 'Вам не назначен предмет. Обратитесь в учебный центр.',
       'open_test': 'Открыть тест',
       'students_lower': 'учеников',
+      'practice_test': 'Тренировочный тест',
+      'create_practice_test': 'Создать тренировочный тест',
+      'pick_subject': 'Предмет',
       'add_branch': '+ Новый раздел',
       'add_topic': '+ Новая тема',
       'new_branch_title': 'Новый раздел',
@@ -793,6 +802,9 @@ class S {
       'no_program': 'You have no subject assigned. Ask your learning center.',
       'open_test': 'Open the test',
       'students_lower': 'students',
+      'practice_test': 'Practice test',
+      'create_practice_test': 'Create a practice test',
+      'pick_subject': 'Subject',
       'add_branch': '+ New section',
       'add_topic': '+ New topic',
       'new_branch_title': 'New section',

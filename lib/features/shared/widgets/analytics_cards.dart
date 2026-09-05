@@ -6,6 +6,58 @@ import '../../../data/models/student_models.dart';
 import '../../../l10n/strings.dart';
 import 'primitives.dart';
 
+/// The AI advice sentence — `GET /home` for a student reading it about
+/// themselves, `GET /teacher/student/:id` for a teacher reading the identical
+/// cached sentence about them. One widget so a design change doesn't have to
+/// be made twice and doesn't quietly drift between the two.
+class AdviceCard extends StatelessWidget {
+  const AdviceCard({super.key, required this.advice});
+
+  final String advice;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.violetTint,
+        borderRadius: AppShapes.cardRadius,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.violet),
+              const SizedBox(width: 8),
+              Text(
+                s.advice,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.violet,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            advice,
+            style: const TextStyle(fontSize: 13, height: 1.55, color: AppColors.ink),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            s.adviceNote,
+            style: const TextStyle(fontSize: 11, color: AppColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// The monthly score bars — `GET /progress` for a student looking at their own
 /// profile, `GET /teacher/student/:id` for a teacher looking at theirs.
 ///

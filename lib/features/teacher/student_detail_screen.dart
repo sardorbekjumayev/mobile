@@ -91,7 +91,7 @@ class StudentDetailScreen extends StatelessWidget {
               ),
               if (student.advice != null) ...[
                 const SizedBox(height: 12),
-                _AdviceCard(advice: student.advice!),
+                AdviceCard(advice: student.advice!),
               ],
               if (student.trend.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -148,54 +148,6 @@ class _Metric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 10, color: AppColors.faint),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AdviceCard extends StatelessWidget {
-  const _AdviceCard({required this.advice});
-
-  final String advice;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = S.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.violetTint,
-        borderRadius: AppShapes.cardRadius,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.violet),
-              const SizedBox(width: 8),
-              Text(
-                s.advice,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.violet,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            advice,
-            style: const TextStyle(fontSize: 13, height: 1.55, color: AppColors.ink),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            s.adviceNote,
-            style: const TextStyle(fontSize: 11, color: AppColors.muted),
           ),
         ],
       ),
