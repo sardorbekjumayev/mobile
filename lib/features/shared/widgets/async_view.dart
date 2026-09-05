@@ -63,7 +63,19 @@ class AsyncViewState<T> extends State<AsyncView<T>> {
     return FutureBuilder<T>(
       future: _future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // `FutureBuilder` carries the previous snapshot's `data` forward into
+        // the new "waiting" state whenever `_future` is swapped for a new one
+        // (`AsyncSnapshot.inState` keeps it) — which is exactly what a
+        // pull-to-refresh does. Checking `connectionState` alone could not
+        // tell "the first load, nothing to show yet" apart from "a refresh
+        // in flight, still showing the last successful page underneath the
+        // spinner", so every refresh replaced the whole screen — including
+        // the `RefreshIndicator` itself — with a bare `LoadingView`. Losing
+        // the very widget whose gesture started the rebuild mid-animation is
+        // what actually threw; requiring `!snapshot.hasData` here is what
+        // keeps `RefreshIndicator` mounted across the refresh it is
+        // performing, which is the fix, not a symptom of one.
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const LoadingView();
         }
         if (snapshot.hasError) {
