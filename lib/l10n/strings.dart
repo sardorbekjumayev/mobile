@@ -43,6 +43,9 @@ class S {
   String get difficultyHard => _t('difficulty_hard');
   String get mixPrior => _t('mix_prior');
   String get mixPriorHint => _t('mix_prior_hint');
+  String get variantMode => _t('variant_mode');
+  String get variantSame => _t('variant_same');
+  String get variantUnique => _t('variant_unique');
   String get generate => _t('generate');
   String get generating => _t('generating');
   String get generatingHint => _t('generating_hint');
@@ -53,6 +56,29 @@ class S {
   String get noProgram => _t('no_program');
   String get openTest => _t('open_test');
   String get studentsLower => _t('students_lower');
+  String get addBranch => _t('add_branch');
+  String get addTopic => _t('add_topic');
+  String get newBranchTitle => _t('new_branch_title');
+  String get newTopicTitle => _t('new_topic_title');
+  String get nameFieldLabel => _t('name_field_label');
+  String get hintFieldLabel => _t('hint_field_label');
+  String get downloadPdf => _t('download_pdf');
+  String get pdfPreparing => _t('pdf_preparing');
+  String get pdfFailed => _t('pdf_failed');
+  String get scanAnswers => _t('scan_answers');
+  String get scanUpload => _t('scan_upload');
+  String get scanEmpty => _t('scan_empty');
+  String get scanReading => _t('scan_reading');
+  String get scanMatched => _t('scan_matched');
+  String get scanUnmatched => _t('scan_unmatched');
+  String get scanFailed => _t('scan_failed');
+  String get assignToStudent => _t('assign_to_student');
+  String get reviewAnswers => _t('review_answers');
+  String get yourAnswerLabel => _t('your_answer_label');
+  String get correctAnswerLabel => _t('correct_answer_label');
+  String get noAnswer => _t('no_answer');
+  String get saveCorrection => _t('save_correction');
+  String get scoreUpdated => _t('score_updated');
   String get phoneTitle => _t('phone_title');
   String get phoneBody => _t('phone_body');
   String get phoneHint => _t('phone_hint');
@@ -266,6 +292,9 @@ class S {
       'difficulty_hard': 'Qiyin',
       'mix_prior': 'Oldingi mavzular bilan aralashtirish',
       'mix_prior_hint': 'Savollarning uchdan biri shu bo\'limdagi oldin o\'tilgan mavzulardan olinadi.',
+      'variant_mode': 'Variant turi',
+      'variant_same': 'Hammaga bir xil',
+      'variant_unique': 'Individual',
       'generate': 'Testni yaratish',
       'generating': 'Test tayyorlanmoqda',
       'generating_hint': 'Bu odatda 10–40 soniya oladi. Ekranni yopsangiz ham to\'xtamaydi.',
@@ -276,6 +305,29 @@ class S {
       'no_program': 'Sizga fan biriktirilmagan. O\'quv markazingizga murojaat qiling.',
       'open_test': 'Testni ochish',
       'students_lower': 'o\'quvchi',
+      'add_branch': '+ Yangi bo\'lim',
+      'add_topic': '+ Yangi mavzu',
+      'new_branch_title': 'Yangi bo\'lim',
+      'new_topic_title': 'Yangi mavzu',
+      'name_field_label': 'Nomi',
+      'hint_field_label': 'Izoh (ixtiyoriy)',
+      'download_pdf': 'PDF yuklab olish',
+      'pdf_preparing': 'PDF tayyorlanmoqda...',
+      'pdf_failed': 'PDF olishda xatolik yuz berdi.',
+      'scan_answers': 'Qog\'oz javoblarini skanerlash',
+      'scan_upload': 'Suratlarni tanlash',
+      'scan_empty': 'Hali skan qilingan varaq yo\'q.',
+      'scan_reading': 'O\'qilmoqda',
+      'scan_matched': 'Baholandi',
+      'scan_unmatched': 'O\'quvchi topilmadi',
+      'scan_failed': 'O\'qib bo\'lmadi',
+      'assign_to_student': 'O\'quvchini biriktirish',
+      'review_answers': 'Javoblarni ko\'rish',
+      'your_answer_label': 'Tanlagan javobi',
+      'correct_answer_label': 'To\'g\'ri javob',
+      'no_answer': 'Javob berilmagan',
+      'save_correction': 'To\'g\'irlashni saqlash',
+      'score_updated': 'Ball yangilandi',
       'phone_title': 'Telefon raqamingiz',
       'phone_body': 'O\'quv markazingiz bergan raqamni kiriting.',
       'phone_hint': 'Hisobni o\'quv markaz ochadi',
@@ -468,6 +520,9 @@ class S {
       'difficulty_hard': 'Сложный',
       'mix_prior': 'Смешать с пройденными темами',
       'mix_prior_hint': 'Треть вопросов возьмётся из ранее пройденных тем этого раздела.',
+      'variant_mode': 'Тип варианта',
+      'variant_same': 'Одинаковый для всех',
+      'variant_unique': 'Индивидуальный',
       'generate': 'Создать тест',
       'generating': 'Тест готовится',
       'generating_hint': 'Обычно 10–40 секунд. Можно закрыть экран — не остановится.',
@@ -478,6 +533,29 @@ class S {
       'no_program': 'Вам не назначен предмет. Обратитесь в учебный центр.',
       'open_test': 'Открыть тест',
       'students_lower': 'учеников',
+      'add_branch': '+ Новый раздел',
+      'add_topic': '+ Новая тема',
+      'new_branch_title': 'Новый раздел',
+      'new_topic_title': 'Новая тема',
+      'name_field_label': 'Название',
+      'hint_field_label': 'Описание (необязательно)',
+      'download_pdf': 'Скачать PDF',
+      'pdf_preparing': 'PDF готовится...',
+      'pdf_failed': 'Не удалось получить PDF.',
+      'scan_answers': 'Сканировать бумажные ответы',
+      'scan_upload': 'Выбрать фото',
+      'scan_empty': 'Пока нет отсканированных листов.',
+      'scan_reading': 'Читается',
+      'scan_matched': 'Оценено',
+      'scan_unmatched': 'Ученик не найден',
+      'scan_failed': 'Не удалось прочитать',
+      'assign_to_student': 'Прикрепить к ученику',
+      'review_answers': 'Посмотреть ответы',
+      'your_answer_label': 'Выбранный ответ',
+      'correct_answer_label': 'Правильный ответ',
+      'no_answer': 'Нет ответа',
+      'save_correction': 'Сохранить исправление',
+      'score_updated': 'Балл обновлён',
       'phone_title': 'Ваш номер телефона',
       'phone_body': 'Введите номер, который выдал ваш учебный центр.',
       'phone_hint': 'Аккаунт создаёт центр',
@@ -670,6 +748,9 @@ class S {
       'difficulty_hard': 'Hard',
       'mix_prior': 'Mix with earlier topics',
       'mix_prior_hint': 'A third of the questions come from topics already covered in this branch.',
+      'variant_mode': 'Variant type',
+      'variant_same': 'Same for everyone',
+      'variant_unique': 'Individual',
       'generate': 'Generate the test',
       'generating': 'Building your test',
       'generating_hint': 'Usually 10-40 seconds. It keeps going if you close this screen.',
@@ -680,6 +761,29 @@ class S {
       'no_program': 'You have no subject assigned. Ask your learning center.',
       'open_test': 'Open the test',
       'students_lower': 'students',
+      'add_branch': '+ New section',
+      'add_topic': '+ New topic',
+      'new_branch_title': 'New section',
+      'new_topic_title': 'New topic',
+      'name_field_label': 'Name',
+      'hint_field_label': 'Note (optional)',
+      'download_pdf': 'Download PDF',
+      'pdf_preparing': 'Preparing the PDF...',
+      'pdf_failed': 'Could not get the PDF.',
+      'scan_answers': 'Scan paper answers',
+      'scan_upload': 'Choose photos',
+      'scan_empty': 'No scanned sheets yet.',
+      'scan_reading': 'Reading',
+      'scan_matched': 'Graded',
+      'scan_unmatched': 'Student not found',
+      'scan_failed': 'Could not read',
+      'assign_to_student': 'Attach to a student',
+      'review_answers': 'Review answers',
+      'your_answer_label': 'Chosen answer',
+      'correct_answer_label': 'Correct answer',
+      'no_answer': 'No answer given',
+      'save_correction': 'Save the correction',
+      'score_updated': 'Score updated',
       'phone_title': 'Your phone number',
       'phone_body': 'Enter the number your learning center issued.',
       'phone_hint': 'Your center creates the account',

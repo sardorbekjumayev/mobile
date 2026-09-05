@@ -28,7 +28,9 @@ import '../features/teacher/student_detail_screen.dart';
 import '../features/teacher/teacher_group_detail_screen.dart';
 import '../features/teacher/teacher_groups_screen.dart';
 import '../features/teacher/teacher_home_screen.dart';
+import '../features/teacher/teacher_student_review_screen.dart';
 import '../features/teacher/teacher_test_detail_screen.dart';
+import '../features/teacher/teacher_test_scan_screen.dart';
 import '../features/teacher/teacher_tests_screen.dart';
 
 /// Where each role starts, and where a redirect sends anyone who wanders into
@@ -184,6 +186,20 @@ GoRouter createRouter({
         path: '/teacher/test/:id',
         builder: (context, state) =>
             TeacherTestDetailScreen(testId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'scan',
+            builder: (context, state) =>
+                TeacherTestScanScreen(testId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'student/:studentTestId/review',
+            builder: (context, state) => TeacherStudentReviewScreen(
+              testId: state.pathParameters['id']!,
+              studentTestId: state.pathParameters['studentTestId']!,
+            ),
+          ),
+        ],
       ),
     ],
   );

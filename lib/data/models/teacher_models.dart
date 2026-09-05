@@ -376,6 +376,7 @@ class TeacherTestDetail {
 class TestParticipant {
   const TestParticipant({
     required this.studentId,
+    required this.studentTestId,
     required this.fullName,
     required this.initials,
     required this.state,
@@ -385,6 +386,9 @@ class TestParticipant {
 
   factory TestParticipant.fromJson(Map<String, dynamic> j) => TestParticipant(
         studentId: asString(j['student_id'] ?? j['id']),
+        // Keyed by the instance, not the student — opening one student's answer
+        // sheet needs this, since a re-sit would otherwise be ambiguous.
+        studentTestId: asString(j['student_test_id']),
         fullName: asString(j['full_name']),
         // Only `GET /student/group/:id` sends `initials`; every other endpoint
         // sends the name alone, and reading a field that is not there drew a
@@ -396,6 +400,7 @@ class TestParticipant {
       );
 
   final String studentId;
+  final String studentTestId;
   final String fullName;
   final String initials;
   final TestState state;
@@ -530,6 +535,16 @@ enum TestDifficulty {
   String get wire => name;
 }
 
+/// `same` deals one paper to the whole class; `unique` gives every student
+/// their own order of the same bank — no extra AI tokens, just a per-student
+/// shuffle, which is why a teacher gets to choose it from a phone.
+enum TestVariantMode {
+  same,
+  unique;
+
+  String get wire => name;
+}
+
 /// `POST /teacher/test/generate`, then `GET /teacher/test/generate/:job_id`.
 class GenerationJob {
   const GenerationJob({
@@ -574,5 +589,144 @@ class GenerationJob {
 
   bool get isDone => state == 'ready';
 
+  bool get isFailed => state == 'failed';
+}
+
+// ── answer review & correction ──────────────────────────────────────────
+
+/// One question on a student's sheet, in the order and letters they saw —
+/// `options[0]` is what they knew as "A". `chosenIndex`/`correctIndex` are
+/// already in that same frame, translated server-side.
+class ReviewQuestion {
+  const ReviewQuestion({
+    required this.questionId,
+    required this.position,
+    required this.text,
+    required this.options,
+    required this.correctIndex,
+    this.chosenIndex,
+    this.isCorrect,
+  });
+
+  factory ReviewQuestion.fromJson(Map<String, dynamic> j) => ReviewQuestion(
+        questionId: asString(j['question_id']),
+        position: asInt(j['position']),
+        text: asString(j['text']),
+        options: asStringList(j['options']),
+        correctIndex: asInt(j['correct_index']),
+        chosenIndex: asIntOrNull(j['chosen_index']),
+        isCorrect: j['is_correct'] as bool?,
+      );
+
+  final String questionId;
+  final int position;
+  final String text;
+  final List<String> options;
+  final int correctIndex;
+
+  /// Null when unanswered; negative (a double mark) is possible from a scan.
+  final int? chosenIndex;
+  final bool? isCorrect;
+
+  bool get wasAnswered => chosenIndex != null && chosenIndex! >= 0;
+}
+
+/// `GET /teacher/test/:id/student/:studentTestId`.
+class StudentAnswerSheet {
+  const StudentAnswerSheet({
+    required this.fullName,
+    required this.state,
+    required this.questions,
+    this.score,
+  });
+
+  factory StudentAnswerSheet.fromJson(Map<String, dynamic> j) => StudentAnswerSheet(
+        fullName: asString(asMap(j['student'])['full_name']),
+        state: asString(j['state']),
+        score: asIntOrNull(j['score']),
+        questions: mapList(j['questions'], ReviewQuestion.fromJson),
+      );
+
+  final String fullName;
+  final String state;
+  final int? score;
+  final List<ReviewQuestion> questions;
+}
+
+/// The score after `POST .../correct` re-grades a sheet.
+class CorrectionResult {
+  const CorrectionResult({required this.score, required this.correctCount, required this.total});
+
+  factory CorrectionResult.fromJson(Map<String, dynamic> j) => CorrectionResult(
+        score: asInt(j['score']),
+        correctCount: asInt(j['correct_count']),
+        total: asInt(j['total']),
+      );
+
+  final int score;
+  final int correctCount;
+  final int total;
+}
+
+/// `A` for index 0. Answer sheets — printed, scanned or reviewed — are always
+/// talked about in letters.
+String letterOf(int index) =>
+    index >= 0 && index < 8 ? String.fromCharCode('A'.codeUnitAt(0) + index) : '?';
+
+// ── paper scanning ──────────────────────────────────────────────────────
+
+class ScannedStudent {
+  const ScannedStudent({required this.studentTestId, required this.fullName, this.score});
+
+  factory ScannedStudent.fromJson(Map<String, dynamic> j) => ScannedStudent(
+        studentTestId: asString(j['student_test_id']),
+        fullName: asString(j['full_name']),
+        score: asIntOrNull(j['score']),
+      );
+
+  final String studentTestId;
+  final String fullName;
+  final int? score;
+}
+
+/// One uploaded, AI-read answer sheet — `GET test/:id/scan`.
+class PaperScan {
+  const PaperScan({
+    required this.id,
+    required this.state,
+    required this.fileUrl,
+    required this.readAnswers,
+    this.readCode,
+    this.confidence,
+    this.error,
+    this.student,
+  });
+
+  factory PaperScan.fromJson(Map<String, dynamic> j) => PaperScan(
+        id: asString(j['id']),
+        state: asString(j['state']),
+        fileUrl: asString(j['file_url']),
+        readCode: asStringOrNull(j['read_code']),
+        readAnswers: (j['read_answers'] is Map)
+            ? (j['read_answers'] as Map).map(
+                (k, v) => MapEntry(k.toString(), v?.toString()),
+              )
+            : const {},
+        confidence: j['confidence'] == null ? null : asDouble(j['confidence']),
+        error: asStringOrNull(j['error']),
+        student: j['student'] == null ? null : ScannedStudent.fromJson(asMap(j['student'])),
+      );
+
+  final String id;
+  final String state;
+  final String fileUrl;
+  final String? readCode;
+  final Map<String, String?> readAnswers;
+  final double? confidence;
+  final String? error;
+  final ScannedStudent? student;
+
+  bool get isMatched => student != null;
+  bool get isReading => state == 'reading';
   bool get isFailed => state == 'failed';
 }

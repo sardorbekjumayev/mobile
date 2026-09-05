@@ -40,6 +40,12 @@ class FakeApiClient implements ApiClient {
   Future<dynamic> upload(String path, {required String field, required String filePath}) =>
       _answer('POST $path', filePath);
 
+  @override
+  Future<List<int>> downloadBytes(String path, {Object? body}) async {
+    final result = await _answer('POST $path', body);
+    return result is List<int> ? result : const [];
+  }
+
   Future<dynamic> _answer(String key, [Object? body]) async {
     calls.add(key);
     bodies[key] = body;

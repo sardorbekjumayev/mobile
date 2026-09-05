@@ -51,6 +51,7 @@ class TeacherRepository {
     required int timeLimitMin,
     int? passScore,
     bool mixPrior = false,
+    TestVariantMode variantMode = TestVariantMode.same,
     DateTime? dueAt,
   }) async {
     final data = await _api.post('/teacher/test/generate', body: {
@@ -61,6 +62,7 @@ class TeacherRepository {
       'time_limit_min': timeLimitMin,
       'pass_score': ?passScore,
       'mix_prior': mixPrior,
+      'variant_mode': variantMode.wire,
       if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
     });
     return GenerationJob.started(asMap(data));
@@ -70,6 +72,71 @@ class TeacherRepository {
         asMap(await _api.get('/teacher/test/generate/$jobId')),
         jobId,
       );
+
+  /// A new section under my own subject — neither panel has this until now.
+  Future<ProgramBranch> createBranch({required String name, String? hint}) async =>
+      ProgramBranch.fromJson(asMap(await _api.post('/teacher/branch/create', body: {
+        'name_i18n': {'uz': name},
+        if (hint != null && hint.isNotEmpty) 'hint_i18n': {'uz': hint},
+      })));
+
+  /// A new topic under one of my sections.
+  Future<ProgramTopic> createTopic({
+    required String branchId,
+    required String name,
+    String? hint,
+  }) async =>
+      ProgramTopic.fromJson(asMap(await _api.post('/teacher/topic/create', body: {
+        'branch_id': branchId,
+        'name_i18n': {'uz': name},
+        if (hint != null && hint.isNotEmpty) 'hint_i18n': {'uz': hint},
+      })));
+
+  /// The printable test — QR-coded, one sheet per student. Raw bytes, not the
+  /// usual JSON envelope.
+  Future<List<int>> testPdf(String testId, {bool withKey = false}) => _api.downloadBytes(
+        '/teacher/test/$testId/pdf',
+        body: {'test_id': testId, 'with_key': withKey},
+      );
+
+  /// One student's sheet, question by question, in the frame they saw it.
+  Future<StudentAnswerSheet> studentAnswers(String testId, String studentTestId) async =>
+      StudentAnswerSheet.fromJson(
+        asMap(await _api.get('/teacher/test/$testId/student/$studentTestId')),
+      );
+
+  /// Overrule the grading on one student's sheet — online or a paper scan,
+  /// the same shape: slot number to the letter of the answer, `null` for
+  /// unanswered. Replaces the sheet wholesale.
+  Future<CorrectionResult> correctAnswers(
+    String testId,
+    String studentTestId,
+    Map<String, String?> answers,
+  ) async =>
+      CorrectionResult.fromJson(asMap(await _api.post(
+        '/teacher/test/$testId/student/$studentTestId/correct',
+        body: {'answers': answers},
+      )));
+
+  // ── paper scanning ──────────────────────────────────────────────────
+
+  /// Uploads one photographed answer sheet. Called once per photo, since
+  /// [ApiClient.upload] takes a single file.
+  Future<void> uploadScan(String testId, String filePath) =>
+      _api.upload('/teacher/test/$testId/scan', field: 'files', filePath: filePath);
+
+  Future<List<PaperScan>> scans(String testId) async =>
+      mapList(await _api.get('/teacher/test/$testId/scan'), PaperScan.fromJson);
+
+  /// "This sheet is Ali's." Attaches an unmatched sheet and grades it.
+  Future<void> assignScan(String scanId, String studentTestId) => _api.post(
+        '/teacher/scan/assign',
+        body: {'scan_id': scanId, 'student_test_id': studentTestId},
+      );
+
+  /// Fixes the letters read off a sheet and re-grades it.
+  Future<void> correctScan(String scanId, Map<String, String?> answers) =>
+      _api.post('/teacher/scan/correct', body: {'scan_id': scanId, 'answers': answers});
 
   /// The one write a teacher makes. Upserts on
   /// `(group_id, student_id, lesson_date)`, so re-submitting the register

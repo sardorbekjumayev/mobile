@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
@@ -20,8 +21,13 @@ abstract class ApiClient {
 
   Future<dynamic> delete(String path, {Object? body});
 
-  /// Multipart upload — used only by `POST /profile/avatar`.
+  /// Multipart upload — a single file per field. Used by `POST /profile/avatar`
+  /// and by the paper-scan upload, which calls it once per photo.
   Future<dynamic> upload(String path, {required String field, required String filePath});
+
+  /// Raw bytes rather than the JSON envelope — for `POST .../pdf`, the one
+  /// response on the API that is not JSON.
+  Future<List<int>> downloadBytes(String path, {Object? body});
 }
 
 /// Per-request context the API contract requires on every call.
@@ -94,6 +100,46 @@ class DioApiClient implements ApiClient {
   Future<dynamic> upload(String path, {required String field, required String filePath}) async {
     final form = FormData.fromMap({field: await MultipartFile.fromFile(filePath)});
     return _send('POST', path, body: form);
+  }
+
+  @override
+  Future<List<int>> downloadBytes(String path, {Object? body}) async {
+    final Response<List<int>> response;
+    try {
+      response = await dio.request<List<int>>(
+        path,
+        data: body,
+        options: Options(
+          method: 'POST',
+          headers: await _headers(),
+          responseType: ResponseType.bytes,
+        ),
+      );
+    } on DioException catch (e) {
+      throw ApiException.network(_networkMessage(e));
+    }
+
+    final status = response.statusCode ?? 0;
+    final bytes = response.data ?? const <int>[];
+    if (status >= 200 && status < 300) return bytes;
+
+    // A non-2xx here is the usual JSON envelope, just read back as bytes
+    // because `responseType` was forced — decode it the same way every other
+    // call does, so a 403/404 throws the same exception type as everywhere
+    // else in the app.
+    throw _envelopeExceptionOf(bytes, status);
+  }
+
+  ApiException _envelopeExceptionOf(List<int> bytes, int status) {
+    try {
+      final decoded = jsonDecode(utf8.decode(bytes));
+      if (decoded is Map<String, dynamic>) {
+        return Envelope.fromJson(decoded).toException(httpStatus: status);
+      }
+    } catch (_) {
+      // Not JSON — fall through to the generic message below.
+    }
+    return ApiException(message: 'Faylni olishda xatolik yuz berdi.', statusCode: status, code: 0);
   }
 
   Future<Map<String, dynamic>> _headers({bool withAuth = true}) async {

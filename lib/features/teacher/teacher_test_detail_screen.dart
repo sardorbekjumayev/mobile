@@ -29,6 +29,14 @@ class TeacherTestDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'scan-answers',
+        backgroundColor: AppColors.violet,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.document_scanner_outlined, size: 18),
+        label: Text(s.scanAnswers, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        onPressed: () => context.push('/teacher/test/$testId/scan'),
+      ),
       body: AsyncView<TeacherTestDetail>(
         load: () => repo.test(testId),
         builder: (context, detail, refresh) => ListView(
@@ -53,7 +61,7 @@ class TeacherTestDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     for (final student in detail.students)
-                      _ParticipantRow(student: student),
+                      _ParticipantRow(testId: testId, student: student),
                   ],
                 ),
               ),
@@ -65,8 +73,9 @@ class TeacherTestDetailScreen extends StatelessWidget {
 }
 
 class _ParticipantRow extends StatelessWidget {
-  const _ParticipantRow({required this.student});
+  const _ParticipantRow({required this.testId, required this.student});
 
+  final String testId;
   final TestParticipant student;
 
   @override
@@ -124,6 +133,15 @@ class _ParticipantRow extends StatelessWidget {
               )
             else
               StatusChip(label: label, background: background, foreground: foreground),
+            if (student.state == TestState.submitted) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.fact_check_outlined, size: 19, color: AppColors.faint),
+                tooltip: S.of(context).reviewAnswers,
+                onPressed: () => context
+                    .push('/teacher/test/$testId/student/${student.studentTestId}/review'),
+              ),
+            ],
           ],
         ),
       ),

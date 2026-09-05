@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
@@ -72,6 +75,7 @@ class _FormState extends State<_Form> {
   int _questionCount = 15;
   int _timeLimit = 25;
   TestDifficulty _difficulty = TestDifficulty.mixed;
+  TestVariantMode _variantMode = TestVariantMode.same;
   bool _mixPrior = false;
 
   bool _busy = false;
@@ -128,6 +132,7 @@ class _FormState extends State<_Form> {
             difficulty: _difficulty,
             timeLimitMin: _timeLimit,
             mixPrior: _mixPrior,
+            variantMode: _variantMode,
           );
       if (!mounted) return;
       setState(() => _job = job);
@@ -255,6 +260,27 @@ class _FormState extends State<_Form> {
           ),
         ),
         const SizedBox(height: 14),
+        _Field(
+          label: s.variantMode,
+          child: Row(
+            children: [
+              for (final mode in TestVariantMode.values) ...[
+                Expanded(
+                  child: _Choice(
+                    label: switch (mode) {
+                      TestVariantMode.same => s.variantSame,
+                      TestVariantMode.unique => s.variantUnique,
+                    },
+                    selected: _variantMode == mode,
+                    onTap: () => setState(() => _variantMode = mode),
+                  ),
+                ),
+                if (mode != TestVariantMode.values.last) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         // A plain Row rather than a SwitchListTile: the tile paints its
         // background and ripple on the nearest Material, and inside AppCard's
         // decorated box that is invisible — Flutter asserts on exactly this.
@@ -356,15 +382,40 @@ class _QuotaBanner extends StatelessWidget {
 }
 
 /// The screen once the job is queued.
-class _Progress extends StatelessWidget {
+class _Progress extends StatefulWidget {
   const _Progress({required this.job, required this.onRetry});
 
   final GenerationJob job;
   final VoidCallback onRetry;
 
   @override
+  State<_Progress> createState() => _ProgressState();
+}
+
+class _ProgressState extends State<_Progress> {
+  bool _downloading = false;
+
+  Future<void> _downloadPdf() async {
+    setState(() => _downloading = true);
+    try {
+      final bytes = await context.read<TeacherRepository>().testPdf(widget.job.testId);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${widget.job.testId}.pdf');
+      await file.writeAsBytes(bytes);
+      if (!mounted) return;
+      await Share.shareXFiles([XFile(file.path)]);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final job = widget.job;
 
     if (job.isFailed) {
       return Padding(
@@ -374,7 +425,7 @@ class _Progress extends StatelessWidget {
           children: [
             EmptyView(message: job.error ?? s.generationFailed, icon: Icons.error_outline_rounded),
             const SizedBox(height: 16),
-            BrandButton(label: s.retry, accent: AppColors.violet, onPressed: onRetry),
+            BrandButton(label: s.retry, accent: AppColors.violet, onPressed: widget.onRetry),
           ],
         ),
       );
@@ -429,26 +480,133 @@ class _Progress extends StatelessWidget {
                 valueColor: const AlwaysStoppedAnimation(AppColors.violet),
               ),
             )
-          else
+          else ...[
             BrandButton(
               label: s.openTest,
               accent: AppColors.violet,
               onPressed: () => context.pushReplacement('/teacher/test/${job.testId}'),
             ),
+            const SizedBox(height: 10),
+            Center(
+              child: GhostButton(
+                label: _downloading ? s.pdfPreparing : s.downloadPdf,
+                onPressed: _downloading ? null : _downloadPdf,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Branch → topic, in study order.
-class _TopicSheet extends StatelessWidget {
+/// Branch → topic, in study order — plus the two writes this sheet owns:
+/// adding a section and adding a topic under it, neither of which exists
+/// anywhere else in the teacher app.
+class _TopicSheet extends StatefulWidget {
   const _TopicSheet({required this.program});
 
   final TeacherProgram program;
 
   @override
+  State<_TopicSheet> createState() => _TopicSheetState();
+}
+
+class _TopicSheetState extends State<_TopicSheet> {
+  late List<ProgramBranch> _branches = List.of(widget.program.branches);
+  bool _busy = false;
+
+  Future<(String, String?)?> _promptName(String title) {
+    final s = S.of(context);
+    final nameCtrl = TextEditingController();
+    final hintCtrl = TextEditingController();
+    return showDialog<(String, String?)>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              autofocus: true,
+              decoration: InputDecoration(labelText: s.nameFieldLabel),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: hintCtrl,
+              decoration: InputDecoration(labelText: s.hintFieldLabel),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(s.cancel)),
+          TextButton(
+            onPressed: () {
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+              final hint = hintCtrl.text.trim();
+              Navigator.of(context).pop((name, hint.isEmpty ? null : hint));
+            },
+            child: Text(s.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addBranch() async {
+    final picked = await _promptName(S.of(context).newBranchTitle);
+    if (picked == null || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final branch = await context
+          .read<TeacherRepository>()
+          .createBranch(name: picked.$1, hint: picked.$2);
+      if (!mounted) return;
+      setState(() {
+        _branches = [..._branches, branch];
+        _busy = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _addTopic(ProgramBranch branch) async {
+    final picked = await _promptName(S.of(context).newTopicTitle);
+    if (picked == null || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final topic = await context
+          .read<TeacherRepository>()
+          .createTopic(branchId: branch.id, name: picked.$1, hint: picked.$2);
+      if (!mounted) return;
+
+      // A topic is what makes a section usable, so adding the first one
+      // selects it and closes the sheet immediately rather than making the
+      // teacher find and tap it a second time.
+      final updated = ProgramBranch(
+        id: branch.id,
+        name: branch.name,
+        hint: branch.hint,
+        topics: [...branch.topics, topic],
+      );
+      Navigator.of(context).pop((updated, topic));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
@@ -456,47 +614,79 @@ class _TopicSheet extends StatelessWidget {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
           children: [
-            Text(program.subjectName, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 12),
-            for (final branch in program.branches) ...[
-              if (branch.topics.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 6),
+            Row(
+              children: [
+                Expanded(
                   child: Text(
-                    branch.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
-                      color: AppColors.faint,
+                    widget.program.subjectName,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                ),
+                TextButton(
+                  onPressed: _busy ? null : _addBranch,
+                  child: Text(s.addBranch),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (final branch in _branches) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        branch.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                          color: AppColors.faint,
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: _busy ? null : () => _addTopic(branch),
+                      borderRadius: AppShapes.tileRadius,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        child: Text(
+                          s.addTopic,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.violet,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              for (final topic in branch.topics)
+                InkWell(
+                  onTap: () => Navigator.of(context).pop((branch, topic)),
+                  borderRadius: AppShapes.tileRadius,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            topic.name,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ),
+                        if (topic.isCustom)
+                          const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.violet),
+                      ],
                     ),
                   ),
                 ),
-                for (final topic in branch.topics)
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop((branch, topic)),
-                    borderRadius: AppShapes.tileRadius,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              topic.name,
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.ink,
-                              ),
-                            ),
-                          ),
-                          if (topic.isCustom)
-                            const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.violet),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
             ],
           ],
         ),
