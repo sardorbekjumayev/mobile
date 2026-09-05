@@ -52,6 +52,7 @@ class TeacherRepository {
     int? passScore,
     bool mixPrior = false,
     TestVariantMode variantMode = TestVariantMode.same,
+    TestFlags flags = const TestFlags(),
     DateTime? dueAt,
   }) async {
     final data = await _api.post('/teacher/test/generate', body: {
@@ -63,6 +64,7 @@ class TeacherRepository {
       'pass_score': ?passScore,
       'mix_prior': mixPrior,
       'variant_mode': variantMode.wire,
+      'flags': flags.toJson(),
       if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
     });
     return GenerationJob.started(asMap(data));
@@ -94,10 +96,22 @@ class TeacherRepository {
 
   /// The printable test — QR-coded, one sheet per student. Raw bytes, not the
   /// usual JSON envelope.
-  Future<List<int>> testPdf(String testId, {bool withKey = false}) => _api.downloadBytes(
+  ///
+  /// The key is on by default: this is the teacher's own copy of a test they
+  /// just generated, not a student's, so there is no reason to withhold the
+  /// answers from it.
+  Future<List<int>> testPdf(String testId, {bool withKey = true}) => _api.downloadBytes(
         '/teacher/test/$testId/pdf',
         body: {'test_id': testId, 'with_key': withKey},
       );
+
+  /// What was generated — one common set for a `same`-variant test, or the
+  /// roster to pick a student's own paper from for a `unique` one.
+  Future<TestPaperOverview> paperOverview(String testId) async =>
+      TestPaperOverview.fromJson(asMap(await _api.get('/teacher/test/$testId/paper')));
+
+  Future<StudentPaper> studentPaper(String testId, String studentTestId) async =>
+      StudentPaper.fromJson(asMap(await _api.get('/teacher/test/$testId/paper/$studentTestId')));
 
   /// One student's sheet, question by question, in the frame they saw it.
   Future<StudentAnswerSheet> studentAnswers(String testId, String studentTestId) async =>

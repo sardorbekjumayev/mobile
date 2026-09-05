@@ -30,6 +30,7 @@ import '../features/teacher/teacher_groups_screen.dart';
 import '../features/teacher/teacher_home_screen.dart';
 import '../features/teacher/teacher_student_review_screen.dart';
 import '../features/teacher/teacher_test_detail_screen.dart';
+import '../features/teacher/teacher_test_paper_screen.dart';
 import '../features/teacher/teacher_test_scan_screen.dart';
 import '../features/teacher/teacher_tests_screen.dart';
 
@@ -191,6 +192,20 @@ GoRouter createRouter({
             path: 'scan',
             builder: (context, state) =>
                 TeacherTestScanScreen(testId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'paper',
+            builder: (context, state) =>
+                TeacherTestPaperScreen(testId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: ':studentTestId',
+                builder: (context, state) => TeacherStudentPaperScreen(
+                  testId: state.pathParameters['id']!,
+                  studentTestId: state.pathParameters['studentTestId']!,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'student/:studentTestId/review',

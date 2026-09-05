@@ -46,6 +46,14 @@ class S {
   String get variantMode => _t('variant_mode');
   String get variantSame => _t('variant_same');
   String get variantUnique => _t('variant_unique');
+  String get advancedSettings => _t('advanced_settings');
+  String get shuffleQuestions => _t('shuffle_questions');
+  String get shuffleAnswers => _t('shuffle_answers');
+  String get showAnswers => _t('show_answers');
+  String get showExplanation => _t('show_explanation');
+  String get allowCalculator => _t('allow_calculator');
+  String get viewVariants => _t('view_variants');
+  String get commonPaper => _t('common_paper');
   String get generate => _t('generate');
   String get generating => _t('generating');
   String get generatingHint => _t('generating_hint');
@@ -295,6 +303,14 @@ class S {
       'variant_mode': 'Variant turi',
       'variant_same': 'Hammaga bir xil',
       'variant_unique': 'Individual',
+      'advanced_settings': 'Qo\'shimcha sozlamalar',
+      'shuffle_questions': 'Savollar tartibini aralashtirish',
+      'shuffle_answers': 'Javoblar tartibini aralashtirish',
+      'show_answers': 'Topshirgach to\'g\'ri javobni ko\'rsatish',
+      'show_explanation': 'Tushuntirish bilan ko\'rsatish',
+      'allow_calculator': 'Kalkulyatorga ruxsat berish',
+      'view_variants': 'Variantlarni ko\'rish',
+      'common_paper': 'Umumiy variant',
       'generate': 'Testni yaratish',
       'generating': 'Test tayyorlanmoqda',
       'generating_hint': 'Bu odatda 10–40 soniya oladi. Ekranni yopsangiz ham to\'xtamaydi.',
@@ -523,6 +539,14 @@ class S {
       'variant_mode': 'Тип варианта',
       'variant_same': 'Одинаковый для всех',
       'variant_unique': 'Индивидуальный',
+      'advanced_settings': 'Дополнительные настройки',
+      'shuffle_questions': 'Перемешать порядок вопросов',
+      'shuffle_answers': 'Перемешать порядок ответов',
+      'show_answers': 'Показать правильный ответ после сдачи',
+      'show_explanation': 'Показывать с объяснением',
+      'allow_calculator': 'Разрешить калькулятор',
+      'view_variants': 'Посмотреть варианты',
+      'common_paper': 'Общий вариант',
       'generate': 'Создать тест',
       'generating': 'Тест готовится',
       'generating_hint': 'Обычно 10–40 секунд. Можно закрыть экран — не остановится.',
@@ -751,6 +775,14 @@ class S {
       'variant_mode': 'Variant type',
       'variant_same': 'Same for everyone',
       'variant_unique': 'Individual',
+      'advanced_settings': 'Advanced settings',
+      'shuffle_questions': 'Shuffle question order',
+      'shuffle_answers': 'Shuffle answer order',
+      'show_answers': 'Show the correct answer after submitting',
+      'show_explanation': 'Show with an explanation',
+      'allow_calculator': 'Allow a calculator',
+      'view_variants': 'View variants',
+      'common_paper': 'Common variant',
       'generate': 'Generate the test',
       'generating': 'Building your test',
       'generating_hint': 'Usually 10-40 seconds. It keeps going if you close this screen.',

@@ -41,6 +41,12 @@ class AsyncViewState<T> extends State<AsyncView<T>> {
   Future<void> refresh() async {
     await widget.onRefresh?.call();
     final next = widget.load();
+    // The pull can still be in flight after the screen was popped — e.g. a
+    // slow network reply landing after the user has already navigated away.
+    // `setState` on a disposed State throws, and that throw is what actually
+    // surfaces as "refreshda xatolik" rather than anything about the request
+    // itself.
+    if (!mounted) return;
     setState(() => _future = next);
     // Swallowed here so the refresh indicator always retracts; the
     // FutureBuilder below is the one place that renders the failure.

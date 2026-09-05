@@ -545,6 +545,47 @@ enum TestVariantMode {
   String get wire => name;
 }
 
+/// Generation flags — the server's own defaults, mirrored here so the form
+/// starts on the same footing the center panel does.
+class TestFlags {
+  const TestFlags({
+    this.shuffleQuestions = true,
+    this.shuffleAnswers = true,
+    this.showAnswers = true,
+    this.showExplanation = true,
+    this.allowCalculator = false,
+  });
+
+  final bool shuffleQuestions;
+  final bool shuffleAnswers;
+  final bool showAnswers;
+  final bool showExplanation;
+  final bool allowCalculator;
+
+  TestFlags copyWith({
+    bool? shuffleQuestions,
+    bool? shuffleAnswers,
+    bool? showAnswers,
+    bool? showExplanation,
+    bool? allowCalculator,
+  }) =>
+      TestFlags(
+        shuffleQuestions: shuffleQuestions ?? this.shuffleQuestions,
+        shuffleAnswers: shuffleAnswers ?? this.shuffleAnswers,
+        showAnswers: showAnswers ?? this.showAnswers,
+        showExplanation: showExplanation ?? this.showExplanation,
+        allowCalculator: allowCalculator ?? this.allowCalculator,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'shuffle_questions': shuffleQuestions,
+        'shuffle_answers': shuffleAnswers,
+        'show_answers': showAnswers,
+        'show_explanation': showExplanation,
+        'allow_calculator': allowCalculator,
+      };
+}
+
 /// `POST /teacher/test/generate`, then `GET /teacher/test/generate/:job_id`.
 class GenerationJob {
   const GenerationJob({
@@ -672,6 +713,111 @@ class CorrectionResult {
 /// talked about in letters.
 String letterOf(int index) =>
     index >= 0 && index < 8 ? String.fromCharCode('A'.codeUnitAt(0) + index) : '?';
+
+// ── the generated paper, before anyone has taken it ─────────────────────
+
+/// One question with its key — `answerIndex` is only ever sent to a teacher.
+class PaperQuestionKey {
+  const PaperQuestionKey({
+    required this.id,
+    required this.position,
+    required this.text,
+    required this.options,
+    required this.answerIndex,
+    this.explanation,
+  });
+
+  factory PaperQuestionKey.fromJson(Map<String, dynamic> j) => PaperQuestionKey(
+        id: asString(j['id']),
+        position: asInt(j['position']),
+        text: asString(j['text']),
+        options: asStringList(j['options']),
+        answerIndex: asInt(j['answer_index']),
+        explanation: asStringOrNull(j['explanation']),
+      );
+
+  final String id;
+  final int position;
+  final String text;
+  final List<String> options;
+  final int answerIndex;
+  final String? explanation;
+}
+
+class PaperStudentRef {
+  const PaperStudentRef({
+    required this.studentTestId,
+    required this.fullName,
+    required this.groupName,
+    this.paperCode,
+    this.score,
+  });
+
+  factory PaperStudentRef.fromJson(Map<String, dynamic> j) => PaperStudentRef(
+        studentTestId: asString(j['student_test_id']),
+        fullName: asString(asMap(j['student'])['full_name']),
+        groupName: asString(asMap(j['group'])['name']),
+        paperCode: asStringOrNull(j['paper_code']),
+        score: asIntOrNull(j['score']),
+      );
+
+  final String studentTestId;
+  final String fullName;
+  final String groupName;
+  final String? paperCode;
+  final int? score;
+}
+
+/// `GET /teacher/test/:id/paper` — `common` is set for a `same`-variant test
+/// (one set every student gets); null for `unique`, where [students] is the
+/// roster to pick one from instead.
+class TestPaperOverview {
+  const TestPaperOverview({
+    required this.variantMode,
+    required this.questionCount,
+    required this.students,
+    this.common,
+  });
+
+  factory TestPaperOverview.fromJson(Map<String, dynamic> j) => TestPaperOverview(
+        variantMode: asString(j['variant_mode'], 'same'),
+        questionCount: asInt(j['question_count']),
+        common: j['common'] == null ? null : mapList(j['common'], PaperQuestionKey.fromJson),
+        students: mapList(j['students'], PaperStudentRef.fromJson),
+      );
+
+  final String variantMode;
+  final int questionCount;
+  final List<PaperQuestionKey>? common;
+  final List<PaperStudentRef> students;
+
+  bool get isSame => variantMode == 'same';
+}
+
+/// `GET /teacher/test/:id/paper/:student_test_id` — one student's own paper.
+class StudentPaper {
+  const StudentPaper({
+    required this.fullName,
+    required this.groupName,
+    required this.questions,
+    this.paperCode,
+    this.score,
+  });
+
+  factory StudentPaper.fromJson(Map<String, dynamic> j) => StudentPaper(
+        fullName: asString(asMap(j['student'])['full_name']),
+        groupName: asString(asMap(j['group'])['name']),
+        paperCode: asStringOrNull(j['paper_code']),
+        score: asIntOrNull(j['score']),
+        questions: mapList(j['questions'], PaperQuestionKey.fromJson),
+      );
+
+  final String fullName;
+  final String groupName;
+  final String? paperCode;
+  final int? score;
+  final List<PaperQuestionKey> questions;
+}
 
 // ── paper scanning ──────────────────────────────────────────────────────
 

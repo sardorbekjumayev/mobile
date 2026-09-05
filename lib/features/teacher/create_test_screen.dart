@@ -77,6 +77,7 @@ class _FormState extends State<_Form> {
   TestDifficulty _difficulty = TestDifficulty.mixed;
   TestVariantMode _variantMode = TestVariantMode.same;
   bool _mixPrior = false;
+  TestFlags _flags = const TestFlags();
 
   bool _busy = false;
   String? _error;
@@ -133,6 +134,7 @@ class _FormState extends State<_Form> {
             timeLimitMin: _timeLimit,
             mixPrior: _mixPrior,
             variantMode: _variantMode,
+            flags: _flags,
           );
       if (!mounted) return;
       setState(() => _job = job);
@@ -318,6 +320,43 @@ class _FormState extends State<_Form> {
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        _Field(
+          label: s.advancedSettings,
+          child: AppCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              children: [
+                _FlagSwitch(
+                  label: s.shuffleQuestions,
+                  value: _flags.shuffleQuestions,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(shuffleQuestions: v)),
+                ),
+                _FlagSwitch(
+                  label: s.shuffleAnswers,
+                  value: _flags.shuffleAnswers,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(shuffleAnswers: v)),
+                ),
+                _FlagSwitch(
+                  label: s.showAnswers,
+                  value: _flags.showAnswers,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(showAnswers: v)),
+                ),
+                _FlagSwitch(
+                  label: s.showExplanation,
+                  value: _flags.showExplanation,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(showExplanation: v)),
+                ),
+                _FlagSwitch(
+                  label: s.allowCalculator,
+                  value: _flags.allowCalculator,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(allowCalculator: v)),
+                  last: true,
+                ),
+              ],
+            ),
+          ),
+        ),
         if (_error != null) ...[
           const SizedBox(height: 14),
           Text(
@@ -488,9 +527,20 @@ class _ProgressState extends State<_Progress> {
             ),
             const SizedBox(height: 10),
             Center(
-              child: GhostButton(
-                label: _downloading ? s.pdfPreparing : s.downloadPdf,
-                onPressed: _downloading ? null : _downloadPdf,
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  GhostButton(
+                    label: _downloading ? s.pdfPreparing : s.downloadPdf,
+                    onPressed: _downloading ? null : _downloadPdf,
+                  ),
+                  GhostButton(
+                    label: s.viewVariants,
+                    onPressed: () => context.push('/teacher/test/${job.testId}/paper'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -879,6 +929,41 @@ class _Round extends StatelessWidget {
           height: 36,
           child: Icon(icon, size: 18, color: enabled ? AppColors.violet : AppColors.faint2),
         ),
+      ),
+    );
+  }
+}
+
+class _FlagSwitch extends StatelessWidget {
+  const _FlagSwitch({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.last = false,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: last
+          ? null
+          : const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.track))),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: AppColors.ink),
+            ),
+          ),
+          Switch.adaptive(value: value, activeThumbColor: AppColors.violet, onChanged: onChanged),
+        ],
       ),
     );
   }
