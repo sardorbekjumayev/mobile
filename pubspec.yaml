@@ -22,14 +22,28 @@ dependencies:
   path_provider: ^2.1.4
   share_plus: ^10.1.2
   image_picker: ^1.1.2
+  flutter_svg: ^2.0.10
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.1
+
+# `flutter pub run flutter_launcher_icons` regenerates every platform's icon
+# from the one source file — the mark alone, not the wordmark: a launcher
+# icon has no room for "Step" and "ix" to stay legible.
+flutter_launcher_icons:
+  image_path: assets/icon/stepix-icon.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/
 
   # Bundled rather than fetched. `AppFonts` has always named these two families
   # — they are the template's — but nothing declared them, so every device fell

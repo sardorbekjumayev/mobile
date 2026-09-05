@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:provider/provider.dart';
 
 import '../../core/session/settings_controller.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../data/models/profile_models.dart';
 import '../../l10n/strings.dart';
@@ -18,7 +18,6 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final brand = context.brand;
     // `GET /settings` is public and already fetched at boot, so the counts are
     // usually there by the time this screen paints. When they are not, the row
     // is simply absent — it never occupies space with placeholders.
@@ -34,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _HeroMark(gradient: brand.gradient, shadowColor: brand.primary),
+                    const _HeroMark(),
                     const SizedBox(height: 24),
                     Text(
                       s.welcomeTitle,
@@ -69,49 +68,22 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-/// The template's hero: a 150px blob with a smaller sand-coloured one clipped
-/// to its shoulder. The satellite is what stops the mark reading as a plain
-/// rounded square — it is the one asymmetric thing on an otherwise centred
-/// screen.
+/// The Stepix mark — its own yellow dot is what stops it reading as a plain
+/// rounded square, so unlike the template this hero was traced from, there is
+/// no separate satellite blob layered on top of it.
 class _HeroMark extends StatelessWidget {
-  const _HeroMark({required this.gradient, required this.shadowColor});
-
-  final Gradient gradient;
-  final Color shadowColor;
+  const _HeroMark();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 168,
-      height: 162,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 150,
-            height: 150,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: AppShapes.splashOf(150),
-              boxShadow: AppShapes.buttonShadow(shadowColor),
-            ),
-            child: const Icon(Icons.bolt_rounded, size: 62, color: Colors.white),
-          ),
-          Positioned(
-            top: 0,
-            right: 6,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: AppColors.sandLight,
-                borderRadius: AppShapes.blob,
-              ),
-            ),
-          ),
-        ],
+    return Container(
+      width: 150,
+      height: 150,
+      decoration: BoxDecoration(
+        borderRadius: AppShapes.splashOf(150),
+        boxShadow: AppShapes.buttonShadow(AppColors.blue),
       ),
+      child: SvgPicture.asset('assets/images/stepix-mark.svg'),
     );
   }
 }

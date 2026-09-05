@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/session/session_controller.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
@@ -34,12 +34,11 @@ class SplashScreen extends StatelessWidget {
                 Container(
                   width: 110,
                   height: 110,
-                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: context.brand.gradient,
                     borderRadius: AppShapes.splash,
+                    boxShadow: AppShapes.buttonShadow(AppColors.blue),
                   ),
-                  child: const Icon(Icons.bolt_rounded, size: 48, color: Colors.white),
+                  child: SvgPicture.asset('assets/images/stepix-mark.svg'),
                 ),
                 if (offline) ...[
                   const SizedBox(height: 26),

@@ -1,0 +1,11 @@
+<svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" y="4" rx="11" fill="url(#sxg)"></rect>
+  <path d="M13 30.5c0 1.9 2.4 3.2 5.6 3.2 3.6 0 5.9-1.6 5.9-4.1 0-2.2-1.5-3.3-4.9-4l-1.7-.35c-1.5-.32-2.2-.8-2.2-1.6 0-.95 1-1.6 2.5-1.6 1.6 0 2.6.7 2.7 1.8h3.4c-.1-2.6-2.4-4.3-6-4.3-3.4 0-5.8 1.7-5.8 4.2 0 2.1 1.5 3.4 4.7 4.05l1.7.36c1.65.35 2.35.8 2.35 1.65 0 1-1.1 1.65-2.75 1.65-1.75 0-2.85-.72-2.95-1.95H13z" fill="white"></path>
+  <circle cx="27.5" cy="17.5" r="2.6" fill="#FFC629"></circle>
+  <text x="52" y="32" font-family="Inter, sans-serif" font-size="24" font-weight="800" letter-spacing="-1" fill="#111827">Step<tspan fill="#2563EB">ix</tspan></text>
+  <defs>
+    <linearGradient id="sxg" x1="0" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"></stop><stop offset="1" stop-color="#6366F1"></stop>
+    </linearGradient>
+  </defs>
+</svg>
