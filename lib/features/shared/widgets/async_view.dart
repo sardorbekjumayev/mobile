@@ -47,7 +47,14 @@ class AsyncViewState<T> extends State<AsyncView<T>> {
     // surfaces as "refreshda xatolik" rather than anything about the request
     // itself.
     if (!mounted) return;
-    setState(() => _future = next);
+    // A block body, not `setState(() => _future = next)`: an assignment
+    // expression evaluates to the value assigned, and `_future = next` is a
+    // `Future` — so that one-liner handed `setState` a callback that returns
+    // a `Future`, which is exactly the thing `setState` throws on. The `{ }`
+    // makes the callback's return type `void` instead.
+    setState(() {
+      _future = next;
+    });
     // Swallowed here so the refresh indicator always retracts; the
     // FutureBuilder below is the one place that renders the failure.
     try {
