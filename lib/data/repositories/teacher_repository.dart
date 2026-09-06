@@ -43,6 +43,10 @@ class TeacherRepository {
   /// The server refuses a group that is not this teacher's with `20713`, and a
   /// teacher who has spent their allowance with `20712` — both carry a message
   /// the screen can show as-is.
+  ///
+  /// [questionTypes] omitted or empty means "auto" — the AI still only writes
+  /// `single_choice` for that case (`AUTO_MIX_ENABLED` is off server-side);
+  /// an explicit list is the only way to get the other four types today.
   Future<GenerationJob> generate({
     required String topicId,
     required List<String> groupIds,
@@ -54,6 +58,7 @@ class TeacherRepository {
     TestVariantMode variantMode = TestVariantMode.same,
     TestFlags flags = const TestFlags(),
     DateTime? dueAt,
+    Set<String> questionTypes = const {},
   }) async {
     final data = await _api.post('/teacher/test/generate', body: {
       'topic_id': topicId,
@@ -66,6 +71,7 @@ class TeacherRepository {
       'variant_mode': variantMode.wire,
       'flags': flags.toJson(),
       if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+      if (questionTypes.isNotEmpty) 'question_types': questionTypes.toList(),
     });
     return GenerationJob.started(asMap(data));
   }

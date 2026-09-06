@@ -41,17 +41,25 @@ class StudentRepository {
   /// Idempotent per question — the endpoint upserts on
   /// `(student_test_id, question_id)`, so a retry after a flaky connection
   /// never duplicates a row or double-counts a question.
+  ///
+  /// Exactly one of [chosenIndex] (single_choice/image_based/audio_based),
+  /// [chosenIndexes] (multiple_choice) or [dragAnswer] (drag_and_drop) is
+  /// set, matching the question's own type — see `AnswerInput`.
   Future<AnswerAck> answer({
     required String testId,
     required String studentTestId,
     required String questionId,
-    required int chosenIndex,
+    int? chosenIndex,
+    List<int>? chosenIndexes,
+    List<int>? dragAnswer,
     required int timeSpentMs,
   }) async {
     final data = await _api.post('/test/$testId/answer', body: {
       'student_test_id': studentTestId,
       'question_id': questionId,
-      'chosen_index': chosenIndex,
+      'chosen_index': ?chosenIndex,
+      'chosen_indexes': ?chosenIndexes,
+      'drag_answer': ?dragAnswer,
       'time_spent_ms': timeSpentMs,
     });
     return AnswerAck.fromJson(asMap(data));

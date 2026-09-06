@@ -52,3 +52,9 @@ DateTime? asDate(dynamic v) {
 
 List<String> asStringList(dynamic v) =>
     v is List ? v.map((e) => e.toString()).toList() : const [];
+
+/// `multiple_choice`'s `answer_indexes`/`chosen_indexes`, `drag_and_drop`'s
+/// `correct`/`drag_answer` — every rich-type field that is a plain list of
+/// indexes.
+List<int> asIntList(dynamic v) =>
+    v is List ? v.map((e) => asInt(e, -1)).toList() : const [];

@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
+import '../../data/models/exam_models.dart' show QuestionKind;
 import '../../data/models/teacher_models.dart';
 import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
@@ -76,6 +77,7 @@ class _FormState extends State<_Form> {
   int _timeLimit = 25;
   TestDifficulty _difficulty = TestDifficulty.mixed;
   TestVariantMode _variantMode = TestVariantMode.same;
+  final Set<String> _questionTypes = {};
   bool _mixPrior = false;
   TestFlags _flags = const TestFlags();
 
@@ -135,6 +137,7 @@ class _FormState extends State<_Form> {
             mixPrior: _mixPrior,
             variantMode: _variantMode,
             flags: _flags,
+            questionTypes: _questionTypes,
           );
       if (!mounted) return;
       setState(() => _job = job);
@@ -280,6 +283,48 @@ class _FormState extends State<_Form> {
                 if (mode != TestVariantMode.values.last) const SizedBox(width: 8),
               ],
             ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        _Field(
+          label: s.questionTypes,
+          child: AppCard(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Column(
+              children: [
+                for (final kind in const [
+                  QuestionKind.singleChoice,
+                  QuestionKind.multipleChoice,
+                  QuestionKind.imageBased,
+                  QuestionKind.audioBased,
+                  QuestionKind.dragAndDrop,
+                ])
+                  _QuestionTypeCheck(
+                    label: switch (kind) {
+                      QuestionKind.multipleChoice => s.questionTypeMultipleChoice,
+                      QuestionKind.imageBased => s.questionTypeImageBased,
+                      QuestionKind.audioBased => s.questionTypeAudioBased,
+                      QuestionKind.dragAndDrop => s.questionTypeDragAndDrop,
+                      _ => s.questionTypeSingleChoice,
+                    },
+                    checked: _questionTypes.contains(kind),
+                    onChanged: (on) => setState(() {
+                      if (on) {
+                        _questionTypes.add(kind);
+                      } else {
+                        _questionTypes.remove(kind);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+          child: Text(
+            s.questionTypesAutoHint,
+            style: const TextStyle(fontSize: 11, height: 1.4, color: AppColors.muted),
           ),
         ),
         const SizedBox(height: 14),
@@ -802,6 +847,44 @@ class _Picker extends StatelessWidget {
           ),
           const Icon(Icons.expand_more_rounded, size: 18, color: AppColors.faint),
         ],
+      ),
+    );
+  }
+}
+
+/// One question-type row — plain `CheckboxListTile`-shaped, since these live
+/// inside an `AppCard` list rather than each getting their own card the way
+/// `_GroupCheck` does.
+class _QuestionTypeCheck extends StatelessWidget {
+  const _QuestionTypeCheck({required this.label, required this.checked, required this.onChanged});
+
+  final String label;
+  final bool checked;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onChanged(!checked),
+      borderRadius: AppShapes.tileRadius,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              checked ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+              size: 20,
+              color: checked ? AppColors.violet : AppColors.faint2,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

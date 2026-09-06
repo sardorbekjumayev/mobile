@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
+import '../../core/util/launcher.dart';
+import '../../data/models/exam_models.dart';
 import '../../data/repositories/student_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
@@ -135,16 +137,33 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
                           ),
                           const SizedBox(height: 22),
                           if (question.figure != null) FigureView(figure: question.figure!),
-                          for (var i = 0; i < question.options.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _Option(
-                                letter: String.fromCharCode(65 + i),
-                                text: question.options[i],
-                                chosen: controller.chosenIndex == i,
-                                onTap: () => controller.choose(i),
+                          if (question.isImage) _MediaImage(url: question.mediaUrl),
+                          if (question.isAudio) _AudioTag(url: question.mediaUrl),
+                          if (question.isMultipleChoice)
+                            for (var i = 0; i < question.options.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _Option(
+                                  letter: String.fromCharCode(65 + i),
+                                  text: question.options[i],
+                                  chosen: controller.chosenIndexes.contains(i),
+                                  multi: true,
+                                  onTap: () => controller.toggleMultiple(i),
+                                ),
+                              )
+                          else if (question.isDragAndDrop)
+                            _DragAndDropBody(controller: controller, question: question)
+                          else
+                            for (var i = 0; i < question.options.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _Option(
+                                  letter: String.fromCharCode(65 + i),
+                                  text: question.options[i],
+                                  chosen: controller.chosenIndex == i,
+                                  onTap: () => controller.chooseSingle(i),
+                                ),
                               ),
-                            ),
                         ],
                       ),
                     ),
@@ -155,7 +174,7 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
                             ? s.submitting
                             : (controller.isLast ? s.finish : s.next),
                         busy: controller.phase == RunnerPhase.submitting,
-                        onPressed: controller.chosenIndex == null ? null : _advance,
+                        onPressed: controller.hasAnswered ? _advance : null,
                       ),
                     ),
                   ],
@@ -256,12 +275,17 @@ class _Option extends StatelessWidget {
     required this.text,
     required this.chosen,
     required this.onTap,
+    this.multi = false,
   });
 
   final String letter;
   final String text;
   final bool chosen;
   final VoidCallback onTap;
+
+  /// `multiple_choice` — a checkmark rather than a filled circle, since more
+  /// than one of these can end up chosen at once.
+  final bool multi;
 
   @override
   Widget build(BuildContext context) {
@@ -312,11 +336,165 @@ class _Option extends StatelessWidget {
                   ),
                 ),
               ),
-              if (chosen) Icon(Icons.check_circle_rounded, size: 19, color: brand.primary),
+              Icon(
+                multi
+                    ? (chosen ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded)
+                    : Icons.check_circle_rounded,
+                size: 19,
+                color: chosen ? brand.primary : (multi ? AppColors.faint2 : Colors.transparent),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// `image_based` — the attached photo, or a hint that nothing's attached yet
+/// (which a `ready` test should never actually reach a student with, but a
+/// missing image must never crash the runner).
+class _MediaImage extends StatelessWidget {
+  const _MediaImage({required this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        child: AspectRatio(
+          aspectRatio: 16 / 10,
+          child: url == null
+              ? Container(
+                  color: AppColors.surface2,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image_not_supported_outlined, color: AppColors.faint),
+                )
+              : Image.network(
+                  url!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => Container(
+                    color: AppColors.surface2,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image_outlined, color: AppColors.faint),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// `audio_based` — opens the clip in the device's own player rather than an
+/// in-app one; the app has no audio-playback dependency yet.
+class _AudioTag extends StatelessWidget {
+  const _AudioTag({required this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Material(
+        color: AppColors.blueTint2,
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        child: InkWell(
+          onTap: url == null ? null : () => openExternal(context, url),
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Icon(Icons.volume_up_rounded, color: context.brand.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    s.playAudio,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.brand.dark,
+                    ),
+                  ),
+                ),
+                Icon(Icons.open_in_new_rounded, size: 16, color: context.brand.primary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// `drag_and_drop` — one row per item, a dropdown of target letters. A native
+/// drag gesture would read closer to the printed/paper version of this
+/// question, but a tap-to-pick dropdown is the more reliable interaction on a
+/// small phone screen, and it reuses the same `DropdownButton` the rest of
+/// the app already ships.
+class _DragAndDropBody extends StatelessWidget {
+  const _DragAndDropBody({required this.controller, required this.question});
+
+  final TestRunnerController controller;
+  final ExamQuestion question;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final drag = question.dragItems;
+    if (drag == null || drag.isEmpty) return const SizedBox.shrink();
+    final targets = controller.dragTargets;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          s.dragAndDropHint,
+          style: const TextStyle(fontSize: 12, color: AppColors.muted),
+        ),
+        const SizedBox(height: 12),
+        for (var i = 0; i < drag.items.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${i + 1}. ${drag.items[i]}',
+                      style: const TextStyle(fontSize: 13.5, color: AppColors.ink),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  DropdownButton<int>(
+                    value: i < targets.length ? targets[i] : null,
+                    hint: Text(s.dragAndDropPick, style: const TextStyle(fontSize: 12.5)),
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      for (var t = 0; t < drag.targets.length; t++)
+                        DropdownMenuItem(
+                          value: t,
+                          child: Text(
+                            '${String.fromCharCode(65 + t)}) ${drag.targets[t]}',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) controller.setDragTarget(i, value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

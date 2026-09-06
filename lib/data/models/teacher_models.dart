@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'exam_models.dart' show DragItems, QuestionKind, questionTypeOf;
 import 'session_models.dart' show initialsOf;
 import 'student_models.dart';
 
@@ -535,9 +536,10 @@ enum TestDifficulty {
   String get wire => name;
 }
 
-/// `same` deals one paper to the whole class; `unique` gives every student
-/// their own order of the same bank — no extra AI tokens, just a per-student
-/// shuffle, which is why a teacher gets to choose it from a phone.
+/// `same` deals one paper to the whole class; `unique` now generates each
+/// student their own independent set of questions (batched AI calls, one
+/// per few students — see the server's `TestAssistant.generateUnique`), not
+/// just a per-student shuffle of one shared bank.
 enum TestVariantMode {
   same,
   unique;
@@ -645,18 +647,39 @@ class ReviewQuestion {
     required this.text,
     required this.options,
     required this.correctIndex,
+    this.type = QuestionKind.singleChoice,
     this.chosenIndex,
     this.isCorrect,
+    this.correctIndexes,
+    this.chosenIndexes,
+    this.dragItems = const DragItems(),
+    this.dragAnswer,
   });
 
+  /// `GET /teacher/test/:id/student/:studentTestId` sends the full per-type
+  /// shape (`answer_indexes`/`chosen_indexes` for `multiple_choice`,
+  /// `items`/`targets`/`correct`/`drag_answer` for `drag_and_drop`) — this
+  /// screen still only lets a teacher *correct* a `single_choice`-shaped
+  /// answer (see `_letterFor`'s own doc), so the other two types are shown
+  /// read-only rather than through a one-letter override that can't express
+  /// "more than one" or a matching exercise.
   factory ReviewQuestion.fromJson(Map<String, dynamic> j) => ReviewQuestion(
         questionId: asString(j['question_id']),
         position: asInt(j['position']),
         text: asString(j['text']),
         options: asStringList(j['options']),
         correctIndex: asInt(j['correct_index']),
+        type: questionTypeOf(j['type']),
         chosenIndex: asIntOrNull(j['chosen_index']),
         isCorrect: j['is_correct'] as bool?,
+        correctIndexes: j['correct_indexes'] == null ? null : asIntList(j['correct_indexes']),
+        chosenIndexes: j['chosen_indexes'] == null ? null : asIntList(j['chosen_indexes']),
+        dragItems: DragItems(
+          items: asStringList(j['items']),
+          targets: asStringList(j['targets']),
+          correct: asIntList(j['correct']),
+        ),
+        dragAnswer: j['drag_answer'] == null ? null : asIntList(j['drag_answer']),
       );
 
   final String questionId;
@@ -664,10 +687,20 @@ class ReviewQuestion {
   final String text;
   final List<String> options;
   final int correctIndex;
+  final String type;
 
   /// Null when unanswered; negative (a double mark) is possible from a scan.
   final int? chosenIndex;
   final bool? isCorrect;
+
+  /// `multiple_choice` only.
+  final List<int>? correctIndexes;
+  final List<int>? chosenIndexes;
+
+  /// `drag_and_drop` only — `items`/`targets`/`correct` (the key).
+  final DragItems dragItems;
+  /// `drag_and_drop` only — this student's own target index per item.
+  final List<int>? dragAnswer;
 
   bool get wasAnswered => chosenIndex != null && chosenIndex! >= 0;
 }
@@ -717,6 +750,11 @@ String letterOf(int index) =>
 // ── the generated paper, before anyone has taken it ─────────────────────
 
 /// One question with its key — `answerIndex` is only ever sent to a teacher.
+///
+/// `buildPaper` on the server sends every rich-type field regardless of
+/// `type` (it's one shared function, not a per-type payload), so parsing
+/// them here is always safe — they're just empty/null for whichever type
+/// doesn't use them.
 class PaperQuestionKey {
   const PaperQuestionKey({
     required this.id,
@@ -724,6 +762,11 @@ class PaperQuestionKey {
     required this.text,
     required this.options,
     required this.answerIndex,
+    this.type = QuestionKind.singleChoice,
+    this.answerIndexes,
+    this.dragItems,
+    this.mediaUrl,
+    this.mediaHint,
     this.explanation,
   });
 
@@ -733,6 +776,11 @@ class PaperQuestionKey {
         text: asString(j['text']),
         options: asStringList(j['options']),
         answerIndex: asInt(j['answer_index']),
+        type: questionTypeOf(j['type']),
+        answerIndexes: j['answer_indexes'] == null ? null : asIntList(j['answer_indexes']),
+        dragItems: j['drag_items'] == null ? null : DragItems.fromJson(j['drag_items']),
+        mediaUrl: asStringOrNull(j['media_url']),
+        mediaHint: asStringOrNull(j['media_hint']),
         explanation: asStringOrNull(j['explanation']),
       );
 
@@ -741,7 +789,25 @@ class PaperQuestionKey {
   final String text;
   final List<String> options;
   final int answerIndex;
+  final String type;
+
+  /// `multiple_choice` only.
+  final List<int>? answerIndexes;
+
+  /// `drag_and_drop` only — includes `correct`, since this payload always
+  /// carries the answer key.
+  final DragItems? dragItems;
+
+  /// `image_based`/`audio_based`.
+  final String? mediaUrl;
+  final String? mediaHint;
+
   final String? explanation;
+
+  bool get isMultipleChoice => type == QuestionKind.multipleChoice;
+  bool get isDragAndDrop => type == QuestionKind.dragAndDrop;
+  bool get isImage => type == QuestionKind.imageBased;
+  bool get isAudio => type == QuestionKind.audioBased;
 }
 
 class PaperStudentRef {

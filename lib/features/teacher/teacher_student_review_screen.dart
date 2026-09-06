@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
+import '../../data/models/exam_models.dart' show QuestionKind;
 import '../../data/models/teacher_models.dart';
 import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
@@ -36,6 +37,17 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
   final Map<String, int> _overrides = {};
   bool _saving = false;
 
+  /// `grade()` keys its answers by a running row number that only equals a
+  /// question's `position` when nothing before it expanded into more than
+  /// one row (see `buildAnswerRows` on the backend) — true for every sheet
+  /// except one with a `drag_and_drop` question in it. This screen has no way
+  /// to recompute that numbering independently without duplicating that
+  /// logic in Dart, so correcting a sheet that contains one is disabled
+  /// outright rather than risk sending every row after it under the wrong key
+  /// and silently erasing real answers.
+  bool _canCorrect(StudentAnswerSheet sheet) =>
+      !sheet.questions.any((q) => q.type == QuestionKind.dragAndDrop);
+
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
@@ -60,10 +72,19 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
                     ),
                   ],
                   const SizedBox(height: 16),
+                  if (!_canCorrect(sheet))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        s.correctionUnsupportedType,
+                        style: const TextStyle(fontSize: 11.5, color: AppColors.clay),
+                      ),
+                    ),
                   for (final q in sheet.questions)
                     _QuestionCard(
                       question: q,
                       chosen: _overrides[q.questionId] ?? q.chosenIndex,
+                      editable: _canCorrect(sheet),
                       onChanged: (i) => setState(() => _overrides[q.questionId] = i),
                     ),
                 ],
@@ -77,7 +98,8 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
                   label: s.saveCorrection,
                   busy: _saving,
                   accent: AppColors.violet,
-                  onPressed: _overrides.isEmpty || _saving ? null : () => _save(sheet),
+                  onPressed:
+                      _overrides.isEmpty || _saving || !_canCorrect(sheet) ? null : () => _save(sheet),
                 ),
               ),
             ),
@@ -87,12 +109,19 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
     );
   }
 
+  /// Only reached when `_canCorrect(sheet)` — no `drag_and_drop` question
+  /// anywhere in the sheet — so every row number still equals its question's
+  /// `position` (see `_canCorrect`'s own doc) and this key scheme is safe.
   Future<void> _save(StudentAnswerSheet sheet) async {
     setState(() => _saving = true);
 
     final answers = <String, String?>{
       for (final q in sheet.questions)
-        '${q.position}': _letterFor(_overrides[q.questionId] ?? q.chosenIndex),
+        '${q.position}': q.type == QuestionKind.multipleChoice
+            // Never overridden here (read-only) — re-sent as it already
+            // stood, or the wholesale-replace would erase it.
+            ? _lettersFor(q.chosenIndexes)
+            : _letterFor(_overrides[q.questionId] ?? q.chosenIndex),
     };
 
     try {
@@ -116,13 +145,25 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
   /// the ambiguity rather than preserving it.
   static String? _letterFor(int? shownIndex) =>
       shownIndex == null || shownIndex < 0 ? null : letterOf(shownIndex);
+
+  static String? _lettersFor(List<int>? shownIndexes) {
+    if (shownIndexes == null || shownIndexes.isEmpty) return null;
+    final letters = shownIndexes.where((i) => i >= 0).map(letterOf).toList();
+    return letters.isEmpty ? null : letters.join();
+  }
 }
 
 class _QuestionCard extends StatelessWidget {
-  const _QuestionCard({required this.question, required this.chosen, required this.onChanged});
+  const _QuestionCard({
+    required this.question,
+    required this.chosen,
+    required this.editable,
+    required this.onChanged,
+  });
 
   final ReviewQuestion question;
   final int? chosen;
+  final bool editable;
   final ValueChanged<int> onChanged;
 
   @override
@@ -144,15 +185,27 @@ class _QuestionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            for (var i = 0; i < question.options.length; i++)
-              _OptionRow(
-                letter: letterOf(i),
-                text: question.options[i],
-                isCorrect: i == question.correctIndex,
-                isChosen: i == chosen,
-                onTap: () => onChanged(i),
-              ),
-            if (chosen == null || chosen! < 0)
+            // `multiple_choice`/`drag_and_drop` aren't shaped for this
+            // screen's single-letter correction (see `_letterFor`'s own
+            // doc) — shown read-only instead of through a one-letter
+            // override that can't express "more than one" or a matching
+            // exercise.
+            if (question.type == QuestionKind.multipleChoice)
+              _MultiChoiceReadOnly(question: question)
+            else if (question.type == QuestionKind.dragAndDrop)
+              _DragAndDropReadOnly(question: question)
+            else
+              for (var i = 0; i < question.options.length; i++)
+                _OptionRow(
+                  letter: letterOf(i),
+                  text: question.options[i],
+                  isCorrect: i == question.correctIndex,
+                  isChosen: i == chosen,
+                  onTap: editable ? () => onChanged(i) : null,
+                ),
+            if (question.type != QuestionKind.multipleChoice &&
+                question.type != QuestionKind.dragAndDrop &&
+                (chosen == null || chosen! < 0))
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(s.noAnswer, style: const TextStyle(fontSize: 11.5, color: AppColors.faint)),
@@ -177,7 +230,7 @@ class _OptionRow extends StatelessWidget {
   final String text;
   final bool isCorrect;
   final bool isChosen;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +269,120 @@ class _OptionRow extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// `multiple_choice`, read-only: every option, marked correct/chosen exactly
+/// like a single-choice row — a student can be right on more than one.
+class _MultiChoiceReadOnly extends StatelessWidget {
+  const _MultiChoiceReadOnly({required this.question});
+
+  final ReviewQuestion question;
+
+  @override
+  Widget build(BuildContext context) {
+    final correct = question.correctIndexes ?? const [];
+    final chosen = question.chosenIndexes ?? const [];
+    return Column(
+      children: [
+        for (var i = 0; i < question.options.length; i++)
+          _OptionRow(
+            letter: letterOf(i),
+            text: question.options[i],
+            isCorrect: correct.contains(i),
+            isChosen: chosen.contains(i),
+            onTap: null,
+          ),
+        if (chosen.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(S.of(context).noAnswer, style: const TextStyle(fontSize: 11.5, color: AppColors.faint)),
+          ),
+      ],
+    );
+  }
+}
+
+/// `drag_and_drop`, read-only: each item beside the target the student
+/// matched it to, marked right/wrong against the key.
+class _DragAndDropReadOnly extends StatelessWidget {
+  const _DragAndDropReadOnly({required this.question});
+
+  final ReviewQuestion question;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = question.dragItems.items;
+    final targets = question.dragItems.targets;
+    final correct = question.dragItems.correct;
+    final given = question.dragAnswer;
+
+    if (given == null) {
+      return Text(S.of(context).noAnswer, style: const TextStyle(fontSize: 11.5, color: AppColors.faint));
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i++)
+          _DragPairRow(
+            item: items[i],
+            chosenTarget: i < given.length && given[i] >= 0 && given[i] < targets.length
+                ? targets[given[i]]
+                : null,
+            correctTarget: i < correct.length && correct[i] < targets.length ? targets[correct[i]] : null,
+            isCorrect: i < given.length && i < correct.length && given[i] == correct[i],
+          ),
+      ],
+    );
+  }
+}
+
+class _DragPairRow extends StatelessWidget {
+  const _DragPairRow({
+    required this.item,
+    required this.chosenTarget,
+    required this.correctTarget,
+    required this.isCorrect,
+  });
+
+  final String item;
+  final String? chosenTarget;
+  final String? correctTarget;
+  final bool isCorrect;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = isCorrect ? AppColors.green : AppColors.clay;
+    final background = isCorrect ? AppColors.greenTint : AppColors.clayTint;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: background, borderRadius: AppShapes.tileRadius),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(item, style: TextStyle(fontSize: 12.5, color: foreground))),
+          Icon(Icons.arrow_forward_rounded, size: 14, color: foreground),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  chosenTarget ?? S.of(context).noAnswer,
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: foreground),
+                ),
+                if (!isCorrect && correctTarget != null)
+                  Text(
+                    '${S.of(context).correctAnswerLabel}: $correctTarget',
+                    style: const TextStyle(fontSize: 10.5, color: AppColors.green),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

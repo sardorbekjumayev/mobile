@@ -8,6 +8,21 @@ import '../../data/repositories/student_repository.dart';
 
 enum RunnerPhase { loading, running, submitting, submitted, failed }
 
+/// One question's in-progress answer, shaped by its type — exactly one of
+/// the three is ever set for a given question.
+class _Answer {
+  const _Answer({this.single, this.multi, this.drag});
+
+  /// single_choice / image_based / audio_based.
+  final int? single;
+
+  /// multiple_choice.
+  final Set<int>? multi;
+
+  /// drag_and_drop — one entry per item, `null` until that item is matched.
+  final List<int?>? drag;
+}
+
 /// Drives the sit-a-test sequence: `start` → `answer`ⁿ → `submit`.
 class TestRunnerController extends ChangeNotifier {
   TestRunnerController({required StudentRepository repository, required this.testId})
@@ -23,8 +38,8 @@ class TestRunnerController extends ChangeNotifier {
   SubmitOutcome? _outcome;
   Timer? _ticker;
 
-  /// questionId → chosen option index.
-  final Map<String, int> _answers = {};
+  /// questionId → this student's answer so far.
+  final Map<String, _Answer> _answers = {};
 
   /// Answers whose POST failed. Retried before submit, because the server
   /// grades what it received, not what the screen shows.
@@ -49,7 +64,32 @@ class TestRunnerController extends ChangeNotifier {
 
   ExamQuestion? get current => _index < questions.length ? questions[_index] : null;
 
-  int? get chosenIndex => current == null ? null : _answers[current!.id];
+  /// single_choice / image_based / audio_based only.
+  int? get chosenIndex => current == null ? null : _answers[current!.id]?.single;
+
+  /// multiple_choice only.
+  Set<int> get chosenIndexes => current == null ? const {} : (_answers[current!.id]?.multi ?? const {});
+
+  /// drag_and_drop only — one entry per item, `null` for an unmatched one.
+  List<int?> get dragTargets {
+    final q = current;
+    if (q == null) return const [];
+    final n = q.dragItems?.items.length ?? 0;
+    return _answers[q.id]?.drag ?? List<int?>.filled(n, null);
+  }
+
+  /// Whether the current question has enough of an answer to move on —
+  /// every drag item matched, at least one option checked, or one chosen.
+  bool get hasAnswered {
+    final q = current;
+    if (q == null) return false;
+    if (q.isMultipleChoice) return chosenIndexes.isNotEmpty;
+    if (q.isDragAndDrop) {
+      final d = dragTargets;
+      return d.isNotEmpty && !d.contains(null);
+    }
+    return chosenIndex != null;
+  }
 
   int get answeredCount => _answers.length;
 
@@ -81,21 +121,62 @@ class TestRunnerController extends ChangeNotifier {
 
   /// Records the choice locally first, then pushes it. The endpoint upserts on
   /// `(student_test_id, question_id)`, so a retry can never double-count.
-  Future<void> choose(int optionIndex) async {
+  /// single_choice / image_based / audio_based.
+  Future<void> chooseSingle(int optionIndex) async {
     final question = current;
-    final attempt = _attempt;
-    if (question == null || attempt == null) return;
-
-    _answers[question.id] = optionIndex;
+    if (question == null) return;
+    _answers[question.id] = _Answer(single: optionIndex);
     notifyListeners();
+    await _push(question, chosenIndex: optionIndex);
+  }
 
+  /// multiple_choice — toggles one option; any number may end up checked.
+  Future<void> toggleMultiple(int optionIndex) async {
+    final question = current;
+    if (question == null) return;
+    final next = {...(_answers[question.id]?.multi ?? const <int>{})};
+    if (!next.remove(optionIndex)) next.add(optionIndex);
+    _answers[question.id] = _Answer(multi: next);
+    notifyListeners();
+    await _push(question, chosenIndexes: next.toList());
+  }
+
+  /// drag_and_drop — pairs one item with one target. Pushed to the server
+  /// only once every item has a target: a partial mapping isn't a valid
+  /// `drag_answer` (it must be one entry per item), and pushing early would
+  /// have the server reject a shape it doesn't recognise instead of just
+  /// waiting for the rest of the matches.
+  Future<void> setDragTarget(int itemIndex, int targetIndex) async {
+    final question = current;
+    if (question == null) return;
+    final itemCount = question.dragItems?.items.length ?? 0;
+    final next = [...(_answers[question.id]?.drag ?? List<int?>.filled(itemCount, null))];
+    if (itemIndex < 0 || itemIndex >= next.length) return;
+    next[itemIndex] = targetIndex;
+    _answers[question.id] = _Answer(drag: next);
+    notifyListeners();
+    if (!next.contains(null)) {
+      await _push(question, dragAnswer: next.cast<int>());
+    }
+  }
+
+  Future<void> _push(
+    ExamQuestion question, {
+    int? chosenIndex,
+    List<int>? chosenIndexes,
+    List<int>? dragAnswer,
+  }) async {
+    final attempt = _attempt;
+    if (attempt == null) return;
     final spent = DateTime.now().difference(_shownAt).inMilliseconds;
     try {
       await _repo.answer(
         testId: testId,
         studentTestId: attempt.studentTestId,
         questionId: question.id,
-        chosenIndex: optionIndex,
+        chosenIndex: chosenIndex,
+        chosenIndexes: chosenIndexes,
+        dragAnswer: dragAnswer,
         timeSpentMs: spent,
       );
       _unsynced.remove(question.id);
@@ -161,14 +242,21 @@ class TestRunnerController extends ChangeNotifier {
 
   Future<void> _flushUnsynced(TestAttempt attempt) async {
     for (final questionId in _unsynced.toList()) {
-      final chosen = _answers[questionId];
-      if (chosen == null) continue;
+      final a = _answers[questionId];
+      if (a == null) continue;
+      final drag = a.drag;
+      final dragAnswer = drag != null && !drag.contains(null) ? drag.cast<int>() : null;
+      // A drag mapping still missing a target here never became "answered"
+      // in the first place — nothing to flush for it.
+      if (a.single == null && (a.multi?.isEmpty ?? true) && dragAnswer == null) continue;
       try {
         await _repo.answer(
           testId: testId,
           studentTestId: attempt.studentTestId,
           questionId: questionId,
-          chosenIndex: chosen,
+          chosenIndex: a.single,
+          chosenIndexes: a.multi?.toList(),
+          dragAnswer: dragAnswer,
           timeSpentMs: 0,
         );
         _unsynced.remove(questionId);

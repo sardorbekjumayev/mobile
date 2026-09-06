@@ -52,14 +52,66 @@ class TestAttempt {
   }
 }
 
+/// The server's `QuestionType` enum, mirrored as plain strings rather than a
+/// Dart `enum` — a response missing `type` entirely (an older payload, or a
+/// backend endpoint that hasn't been extended yet) must still parse as the
+/// one type that always existed: `single_choice`.
+class QuestionKind {
+  static const singleChoice = 'single_choice';
+  static const multipleChoice = 'multiple_choice';
+  static const imageBased = 'image_based';
+  static const audioBased = 'audio_based';
+  static const dragAndDrop = 'drag_and_drop';
+}
+
+String questionTypeOf(dynamic v) {
+  const known = {
+    QuestionKind.singleChoice,
+    QuestionKind.multipleChoice,
+    QuestionKind.imageBased,
+    QuestionKind.audioBased,
+    QuestionKind.dragAndDrop,
+  };
+  final s = v?.toString();
+  return known.contains(s) ? s! : QuestionKind.singleChoice;
+}
+
+/// `drag_and_drop`'s matching exercise — items on the left, targets on the
+/// right. `correct` is the answer key: present on the result/teacher-review
+/// payloads, empty on the pre-submission ones (`POST /test/:id/start`) where
+/// it must never be shipped to the device.
+class DragItems {
+  const DragItems({this.items = const [], this.targets = const [], this.correct = const []});
+
+  factory DragItems.fromJson(dynamic j) {
+    if (j == null) return const DragItems();
+    final m = asMap(j);
+    return DragItems(
+      items: asStringList(m['items']),
+      targets: asStringList(m['targets']),
+      correct: asIntList(m['correct']),
+    );
+  }
+
+  final List<String> items;
+  final List<String> targets;
+  final List<int> correct;
+
+  bool get isEmpty => items.isEmpty;
+}
+
 class ExamQuestion {
   const ExamQuestion({
     required this.id,
     required this.position,
     required this.text,
     required this.options,
+    this.type = QuestionKind.singleChoice,
     this.skill,
     this.figure,
+    this.mediaUrl,
+    this.mediaHint,
+    this.dragItems,
   });
 
   factory ExamQuestion.fromJson(Map<String, dynamic> j) => ExamQuestion(
@@ -67,16 +119,35 @@ class ExamQuestion {
         position: asInt(j['position']),
         text: asString(j['text']),
         options: asStringList(j['options']),
+        type: questionTypeOf(j['type']),
         skill: asStringOrNull(j['skill']),
         figure: j['figure'] == null ? null : QuestionFigure.fromJson(asMap(j['figure'])),
+        mediaUrl: asStringOrNull(j['media_url']),
+        mediaHint: asStringOrNull(j['media_hint']),
+        dragItems: j['drag_items'] == null ? null : DragItems.fromJson(j['drag_items']),
       );
 
   final String id;
   final int position;
   final String text;
   final List<String> options;
+  final String type;
   final String? skill;
   final QuestionFigure? figure;
+
+  /// `image_based`/`audio_based` — the attached file, once a teacher has
+  /// attached one. Null means "not attached yet", which a `ready` test can
+  /// never actually reach the student with (`start` refuses it server-side),
+  /// so in practice this is only ever null while the question type itself is
+  /// unset — see `QuestionKind`'s own doc.
+  final String? mediaUrl;
+  final String? mediaHint;
+  final DragItems? dragItems;
+
+  bool get isMultipleChoice => type == QuestionKind.multipleChoice;
+  bool get isDragAndDrop => type == QuestionKind.dragAndDrop;
+  bool get isImage => type == QuestionKind.imageBased;
+  bool get isAudio => type == QuestionKind.audioBased;
 }
 
 /// A drawing spec for geometry and physics questions, rendered on a 320×220
@@ -257,7 +328,7 @@ class TestResult {
   final int durationSec;
 
   /// True when the center turned answer review off — the score stands alone.
-  bool get answersHidden => questions.isEmpty || questions.every((q) => q.answerIndex == null);
+  bool get answersHidden => questions.isEmpty || questions.every((q) => !q.hasAnswerKey);
 }
 
 class ResultQuestion {
@@ -266,8 +337,14 @@ class ResultQuestion {
     required this.position,
     required this.text,
     required this.options,
+    this.type = QuestionKind.singleChoice,
     this.answerIndex,
     this.chosenIndex,
+    this.answerIndexes,
+    this.chosenIndexes,
+    this.dragItems,
+    this.dragAnswer,
+    this.isCorrectServer,
     this.explanation,
     this.skill,
   });
@@ -277,8 +354,20 @@ class ResultQuestion {
         position: asInt(j['position']),
         text: asString(j['text']),
         options: asStringList(j['options']),
+        type: questionTypeOf(j['type']),
         answerIndex: asIntOrNull(j['answer_index']),
         chosenIndex: asIntOrNull(j['chosen_index']),
+        answerIndexes: j['answer_indexes'] == null ? null : asIntList(j['answer_indexes']),
+        chosenIndexes: j['chosen_indexes'] == null ? null : asIntList(j['chosen_indexes']),
+        dragItems: j['items'] == null && j['targets'] == null
+            ? null
+            : DragItems(
+                items: asStringList(j['items']),
+                targets: asStringList(j['targets']),
+                correct: asIntList(j['correct']),
+              ),
+        dragAnswer: j['drag_answer'] == null ? null : asIntList(j['drag_answer']),
+        isCorrectServer: j['is_correct'] as bool?,
         explanation: asStringOrNull(j['explanation']),
         skill: asStringOrNull(j['skill']),
       );
@@ -287,13 +376,61 @@ class ResultQuestion {
   final int position;
   final String text;
   final List<String> options;
+  final String type;
   final int? answerIndex;
   final int? chosenIndex;
+
+  /// `multiple_choice` only.
+  final List<int>? answerIndexes;
+  final List<int>? chosenIndexes;
+
+  /// `drag_and_drop` only — `dragItems.correct` is the key, `dragAnswer` is
+  /// what this student matched, parallel to `dragItems.items`.
+  final DragItems? dragItems;
+  final List<int>? dragAnswer;
+
+  /// The server's own verdict, when it sends one — always present from
+  /// `GET /test/:id/result`, absent from screens built before rich types
+  /// that only ever compared `chosenIndex == answerIndex` themselves.
+  final bool? isCorrectServer;
+
   final String? explanation;
   final String? skill;
 
-  /// Unanswered counts as incorrect — the same rule the server grades by.
-  bool get isCorrect => answerIndex != null && chosenIndex == answerIndex;
+  bool get isMultipleChoice => type == QuestionKind.multipleChoice;
+  bool get isDragAndDrop => type == QuestionKind.dragAndDrop;
 
-  bool get isUnanswered => chosenIndex == null;
+  /// Unanswered counts as incorrect — the same rule the server grades by.
+  bool get isCorrect {
+    if (isCorrectServer != null) return isCorrectServer!;
+    if (isMultipleChoice) {
+      final chosen = {...(chosenIndexes ?? const [])};
+      final correct = {...(answerIndexes ?? const [])};
+      return chosen.isNotEmpty && chosen.length == correct.length && chosen.containsAll(correct);
+    }
+    if (isDragAndDrop) {
+      final given = dragAnswer ?? const [];
+      final correct = dragItems?.correct ?? const [];
+      return given.isNotEmpty &&
+          given.length == correct.length &&
+          List.generate(given.length, (i) => given[i] == correct[i]).every((v) => v);
+    }
+    return answerIndex != null && chosenIndex == answerIndex;
+  }
+
+  bool get isUnanswered {
+    if (isMultipleChoice) return chosenIndexes == null || chosenIndexes!.isEmpty;
+    if (isDragAndDrop) return dragAnswer == null || dragAnswer!.isEmpty;
+    return chosenIndex == null;
+  }
+
+  /// Whether the server actually sent this question's answer key — gated on
+  /// `tests.flags.show_answers`, and shaped differently per type, so
+  /// `TestResult.answersHidden` can't just check `answerIndex` the way it
+  /// could before `multiple_choice`/`drag_and_drop` existed.
+  bool get hasAnswerKey {
+    if (isMultipleChoice) return answerIndexes != null;
+    if (isDragAndDrop) return dragItems != null && dragItems!.correct.isNotEmpty;
+    return answerIndex != null;
+  }
 }

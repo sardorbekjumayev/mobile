@@ -154,12 +154,22 @@ class _ResultCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          for (var i = 0; i < question.options.length; i++)
-            _OptionLine(
-              text: question.options[i],
-              isCorrect: question.answerIndex == i,
-              isChosen: question.chosenIndex == i,
-            ),
+          if (question.isDragAndDrop)
+            _DragAndDropResult(question: question)
+          else if (question.isMultipleChoice)
+            for (var i = 0; i < question.options.length; i++)
+              _OptionLine(
+                text: question.options[i],
+                isCorrect: question.answerIndexes?.contains(i) ?? false,
+                isChosen: question.chosenIndexes?.contains(i) ?? false,
+              )
+          else
+            for (var i = 0; i < question.options.length; i++)
+              _OptionLine(
+                text: question.options[i],
+                isCorrect: question.answerIndex == i,
+                isChosen: question.chosenIndex == i,
+              ),
           if (question.isUnanswered) ...[
             const SizedBox(height: 8),
             Text(
@@ -195,6 +205,85 @@ class _ResultCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// `drag_and_drop` — one line per item: what the student matched it to, and
+/// the correct target beside it when they got it wrong.
+class _DragAndDropResult extends StatelessWidget {
+  const _DragAndDropResult({required this.question});
+
+  final ResultQuestion question;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final drag = question.dragItems;
+    final given = question.dragAnswer ?? const [];
+    if (drag == null || drag.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < drag.items.length; i++)
+          _buildRow(context, s, drag, given, i),
+      ],
+    );
+  }
+
+  Widget _buildRow(BuildContext context, S s, DragItems drag, List<int> given, int i) {
+    final chosen = i < given.length ? given[i] : null;
+    final correctTarget = i < drag.correct.length ? drag.correct[i] : null;
+    final isCorrect = chosen != null && chosen == correctTarget;
+
+    String label(int? t) => t == null || t < 0 || t >= drag.targets.length
+        ? s.notAnswered
+        : '${String.fromCharCode(65 + t)}) ${drag.targets[t]}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCorrect ? AppColors.greenTint : AppColors.clayTint,
+        borderRadius: AppShapes.tileRadius,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 16,
+            color: isCorrect ? AppColors.green : AppColors.clay,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${i + 1}. ${drag.items[i]}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isCorrect ? AppColors.green : AppColors.clay,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label(chosen),
+                  style: TextStyle(fontSize: 12, color: isCorrect ? AppColors.green : AppColors.clay),
+                ),
+                if (!isCorrect)
+                  Text(
+                    label(correctTarget),
+                    style: const TextStyle(fontSize: 12, color: AppColors.green),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

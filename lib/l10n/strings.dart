@@ -46,6 +46,19 @@ class S {
   String get variantMode => _t('variant_mode');
   String get variantSame => _t('variant_same');
   String get variantUnique => _t('variant_unique');
+  String get questionTypes => _t('question_types');
+  String get questionTypesAutoHint => _t('question_types_auto_hint');
+  String get questionTypeSingleChoice => _t('question_type_single_choice');
+  String get questionTypeMultipleChoice => _t('question_type_multiple_choice');
+  String get questionTypeImageBased => _t('question_type_image_based');
+  String get questionTypeAudioBased => _t('question_type_audio_based');
+  String get questionTypeDragAndDrop => _t('question_type_drag_and_drop');
+  String get playAudio => _t('play_audio');
+  String get dragAndDropHint => _t('drag_and_drop_hint');
+  String get dragAndDropPick => _t('drag_and_drop_pick');
+  String get mediaNotAttached => _t('media_not_attached');
+  String get attachMedia => _t('attach_media');
+  String get correctionUnsupportedType => _t('correction_unsupported_type');
   String get advancedSettings => _t('advanced_settings');
   String get shuffleQuestions => _t('shuffle_questions');
   String get shuffleAnswers => _t('shuffle_answers');
@@ -306,6 +319,21 @@ class S {
       'variant_mode': 'Variant turi',
       'variant_same': 'Hammaga bir xil',
       'variant_unique': 'Individual',
+      'question_types': 'Savol turlari',
+      'question_types_auto_hint':
+          'Tanlanmasa, sun\'iy intellekt hozircha faqat bitta to\'g\'ri javobli savollar tuzadi.',
+      'question_type_single_choice': 'Bitta to\'g\'ri javob',
+      'question_type_multiple_choice': 'Bir nechta to\'g\'ri javob',
+      'question_type_image_based': 'Rasmli',
+      'question_type_audio_based': 'Audioli',
+      'question_type_drag_and_drop': 'Moslashtirish',
+      'play_audio': 'Audioni ijro etish',
+      'drag_and_drop_hint': 'Har bir raqamga mos harfni tanlang.',
+      'drag_and_drop_pick': 'Tanlang',
+      'media_not_attached': 'Fayl biriktirilmagan',
+      'attach_media': 'Fayl biriktirish',
+      'correction_unsupported_type':
+          'Bu turdagi savol uchun tuzatish hozircha qo\'llab-quvvatlanmaydi — web panelda tahrirlang.',
       'advanced_settings': 'Qo\'shimcha sozlamalar',
       'shuffle_questions': 'Savollar tartibini aralashtirish',
       'shuffle_answers': 'Javoblar tartibini aralashtirish',
@@ -545,6 +573,21 @@ class S {
       'variant_mode': 'Тип варианта',
       'variant_same': 'Одинаковый для всех',
       'variant_unique': 'Индивидуальный',
+      'question_types': 'Типы вопросов',
+      'question_types_auto_hint':
+          'Если не выбрано, ИИ пока составляет только вопросы с одним правильным ответом.',
+      'question_type_single_choice': 'Один правильный ответ',
+      'question_type_multiple_choice': 'Несколько правильных ответов',
+      'question_type_image_based': 'С изображением',
+      'question_type_audio_based': 'С аудио',
+      'question_type_drag_and_drop': 'Сопоставление',
+      'play_audio': 'Воспроизвести аудио',
+      'drag_and_drop_hint': 'Выберите подходящую букву для каждого номера.',
+      'drag_and_drop_pick': 'Выбрать',
+      'media_not_attached': 'Файл не прикреплён',
+      'attach_media': 'Прикрепить файл',
+      'correction_unsupported_type':
+          'Исправление для этого типа вопроса пока не поддерживается — редактируйте в веб-панели.',
       'advanced_settings': 'Дополнительные настройки',
       'shuffle_questions': 'Перемешать порядок вопросов',
       'shuffle_answers': 'Перемешать порядок ответов',
@@ -784,6 +827,21 @@ class S {
       'variant_mode': 'Variant type',
       'variant_same': 'Same for everyone',
       'variant_unique': 'Individual',
+      'question_types': 'Question types',
+      'question_types_auto_hint':
+          'Left unset, the AI still only writes single-correct-answer questions for now.',
+      'question_type_single_choice': 'Single correct answer',
+      'question_type_multiple_choice': 'Multiple correct answers',
+      'question_type_image_based': 'Image-based',
+      'question_type_audio_based': 'Audio-based',
+      'question_type_drag_and_drop': 'Matching',
+      'play_audio': 'Play audio',
+      'drag_and_drop_hint': 'Pick the matching letter for each number.',
+      'drag_and_drop_pick': 'Pick',
+      'media_not_attached': 'No file attached',
+      'attach_media': 'Attach a file',
+      'correction_unsupported_type':
+          'Correcting this question type isn\'t supported yet here — edit it in the web panel.',
       'advanced_settings': 'Advanced settings',
       'shuffle_questions': 'Shuffle question order',
       'shuffle_answers': 'Shuffle answer order',
