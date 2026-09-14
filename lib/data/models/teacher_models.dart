@@ -531,6 +531,7 @@ class TeacherQuota {
     required this.used,
     required this.limit,
     required this.remaining,
+    this.unlimited = false,
     this.resetsAt,
   });
 
@@ -538,15 +539,18 @@ class TeacherQuota {
         used: asInt(j['used']),
         limit: asInt(j['limit']),
         remaining: asInt(j['remaining']),
+        unlimited: j['unlimited'] == true,
         resetsAt: asDate(j['resets_at']),
       );
 
   final int used;
   final int limit;
   final int remaining;
+  /// The server has the monthly allowance switched off — no banner, no wall.
+  final bool unlimited;
   final DateTime? resetsAt;
 
-  bool get isExhausted => remaining <= 0;
+  bool get isExhausted => !unlimited && remaining <= 0;
 }
 
 /// How hard the questions should be. The server's own three values.

@@ -195,7 +195,7 @@ class _FormState extends State<_Form> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       children: [
-        _QuotaBanner(quota: setup.quota),
+        if (!setup.quota.unlimited) _QuotaBanner(quota: setup.quota),
         const SizedBox(height: 14),
         _Field(
           label: s.pickTopic,
