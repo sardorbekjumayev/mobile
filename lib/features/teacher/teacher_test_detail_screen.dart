@@ -10,6 +10,7 @@ import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import '../shared/widgets/solution_analysis.dart';
 import 'teacher_tests_screen.dart' show TeacherTestCard;
 
 /// M17 detail — `GET /teacher/test/:id`.
@@ -45,6 +46,8 @@ class TeacherTestDetailScreen extends StatelessWidget {
             // The card is not tappable here: this *is* the test it opens.
             TeacherTestCard(test: detail.test, onTap: () {}),
             const SizedBox(height: 12),
+            _PublishCard(test: detail.test, onDone: refresh),
+            const SizedBox(height: 12),
             if (detail.students.isEmpty)
               EmptyView(message: s.noTeacherTests, icon: Icons.groups_2_outlined)
             else
@@ -61,7 +64,11 @@ class TeacherTestDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     for (final student in detail.students)
-                      _ParticipantRow(testId: testId, student: student),
+                      _ParticipantRow(
+                        testId: testId,
+                        student: student,
+                        showSolution: detail.test.solutionRequired,
+                      ),
                   ],
                 ),
               ),
@@ -72,11 +79,83 @@ class TeacherTestDetailScreen extends StatelessWidget {
   }
 }
 
+/// Send the test to the class, from the phone.
+///
+/// A generated test is reviewable but invisible until this is pressed — the
+/// card says so in as many words, because a teacher who does not know that is
+/// a teacher whose class never receives the test.
+class _PublishCard extends StatefulWidget {
+  const _PublishCard({required this.test, required this.onDone});
+
+  final TeacherTest test;
+  final VoidCallback onDone;
+
+  @override
+  State<_PublishCard> createState() => _PublishCardState();
+}
+
+class _PublishCardState extends State<_PublishCard> {
+  bool _busy = false;
+
+  Future<void> _send() async {
+    final s = S.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      final notified = await context.read<TeacherRepository>().publishTest(widget.test.id);
+      messenger.showSnackBar(
+        SnackBar(content: Text('${s.sentToStudents} · $notified')),
+      );
+      widget.onDone();
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final published = widget.test.isPublished;
+
+    return AppCard(
+      color: published ? AppColors.surface : AppColors.sandTint,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!published) ...[
+            Text(
+              s.notSentYet,
+              style: const TextStyle(fontSize: 12, color: AppColors.sand, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+          ],
+          BrandButton(
+            label: published ? s.sendAgain : s.sendToStudents,
+            icon: Icons.send_outlined,
+            busy: _busy,
+            accent: AppColors.violet,
+            onPressed: _busy ? null : _send,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ParticipantRow extends StatelessWidget {
-  const _ParticipantRow({required this.testId, required this.student});
+  const _ParticipantRow({
+    required this.testId,
+    required this.student,
+    this.showSolution = false,
+  });
 
   final String testId;
   final TestParticipant student;
+
+  /// The test requires a worked solution sheet — badge its state per student.
+  final bool showSolution;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +198,10 @@ class _ParticipantRow extends StatelessWidget {
                       DateFormat('d MMM, HH:mm').format(student.submittedAt!),
                       style: const TextStyle(fontSize: 11, color: AppColors.faint),
                     ),
+                  if (showSolution) ...[
+                    const SizedBox(height: 5),
+                    SolutionStateChip(state: student.solutionState),
+                  ],
                 ],
               ),
             ),

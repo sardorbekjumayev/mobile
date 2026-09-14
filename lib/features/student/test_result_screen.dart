@@ -9,6 +9,8 @@ import '../../data/repositories/student_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import '../shared/widgets/solution_analysis.dart';
+import 'solution_upload_screen.dart';
 
 /// M9 — `GET /test/:id/result`, the only payload carrying correct answers.
 ///
@@ -34,6 +36,22 @@ class TestResultScreen extends StatelessWidget {
           children: [
             _ScoreHero(result: result),
             const SizedBox(height: 16),
+            if (result.solutionRequired) ...[
+              SolutionAnalysisSection(
+                solution: result.solution,
+                onRefresh: refresh,
+                onUpload: () async {
+                  final uploaded = await openSolutionUpload(
+                    context,
+                    testId: testId,
+                    pages: result.solutionPages,
+                    retry: result.solution != null,
+                  );
+                  if (uploaded) await refresh();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
             if (result.answersHidden)
               EmptyView(message: s.answersHidden, icon: Icons.visibility_off_outlined)
             else

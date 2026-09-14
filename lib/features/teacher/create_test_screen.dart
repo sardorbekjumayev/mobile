@@ -7,8 +7,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../app/config.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
+import '../../core/util/launcher.dart';
 import '../../data/models/exam_models.dart' show QuestionKind;
 import '../../data/models/teacher_models.dart';
 import '../../data/repositories/teacher_repository.dart';
@@ -80,6 +82,8 @@ class _FormState extends State<_Form> {
   final Set<String> _questionTypes = {};
   bool _mixPrior = false;
   TestFlags _flags = const TestFlags();
+  bool _solutionRequired = false;
+  int _solutionPages = 2;
 
   bool _busy = false;
   String? _error;
@@ -138,6 +142,8 @@ class _FormState extends State<_Form> {
             variantMode: _variantMode,
             flags: _flags,
             questionTypes: _questionTypes,
+            solutionRequired: _solutionRequired,
+            solutionPages: _solutionPages,
           );
       if (!mounted) return;
       setState(() => _job = job);
@@ -296,14 +302,12 @@ class _FormState extends State<_Form> {
                   QuestionKind.singleChoice,
                   QuestionKind.multipleChoice,
                   QuestionKind.imageBased,
-                  QuestionKind.audioBased,
                   QuestionKind.dragAndDrop,
                 ])
                   _QuestionTypeCheck(
                     label: switch (kind) {
                       QuestionKind.multipleChoice => s.questionTypeMultipleChoice,
                       QuestionKind.imageBased => s.questionTypeImageBased,
-                      QuestionKind.audioBased => s.questionTypeAudioBased,
                       QuestionKind.dragAndDrop => s.questionTypeDragAndDrop,
                       _ => s.questionTypeSingleChoice,
                     },
@@ -366,6 +370,68 @@ class _FormState extends State<_Form> {
           ),
         ),
         const SizedBox(height: 14),
+        AppCard(
+          padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.solutionRequiredToggle,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          s.solutionRequiredHint,
+                          style: const TextStyle(fontSize: 11.5, height: 1.4, color: AppColors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Switch.adaptive(
+                    value: _solutionRequired,
+                    activeThumbColor: AppColors.violet,
+                    onChanged: (v) => setState(() => _solutionRequired = v),
+                  ),
+                ],
+              ),
+              if (_solutionRequired) ...[
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: _Field(
+                    label: s.solutionPagesLabel,
+                    child: _Stepper(
+                      value: _solutionPages,
+                      min: 1,
+                      max: 10,
+                      step: 1,
+                      onChanged: (v) => setState(() => _solutionPages = v),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 10),
+              GhostButton(
+                label: s.solutionSamplePdf,
+                dense: true,
+                onPressed: () => openExternal(context, AppConfig.solutionSampleUrl),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         _Field(
           label: s.advancedSettings,
           child: AppCard(
@@ -396,6 +462,11 @@ class _FormState extends State<_Form> {
                   label: s.allowCalculator,
                   value: _flags.allowCalculator,
                   onChanged: (v) => setState(() => _flags = _flags.copyWith(allowCalculator: v)),
+                ),
+                _FlagSwitch(
+                  label: s.withImages,
+                  value: _flags.withImages,
+                  onChanged: (v) => setState(() => _flags = _flags.copyWith(withImages: v)),
                   last: true,
                 ),
               ],

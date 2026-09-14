@@ -51,9 +51,7 @@ class S {
   String get questionTypeSingleChoice => _t('question_type_single_choice');
   String get questionTypeMultipleChoice => _t('question_type_multiple_choice');
   String get questionTypeImageBased => _t('question_type_image_based');
-  String get questionTypeAudioBased => _t('question_type_audio_based');
   String get questionTypeDragAndDrop => _t('question_type_drag_and_drop');
-  String get playAudio => _t('play_audio');
   String get dragAndDropHint => _t('drag_and_drop_hint');
   String get dragAndDropPick => _t('drag_and_drop_pick');
   String get mediaNotAttached => _t('media_not_attached');
@@ -65,6 +63,7 @@ class S {
   String get showAnswers => _t('show_answers');
   String get showExplanation => _t('show_explanation');
   String get allowCalculator => _t('allow_calculator');
+  String get withImages => _t('with_images');
   String get viewVariants => _t('view_variants');
   String get commonPaper => _t('common_paper');
   String get generate => _t('generate');
@@ -90,6 +89,10 @@ class S {
   String get pdfPreparing => _t('pdf_preparing');
   String get pdfFailed => _t('pdf_failed');
   String get scanAnswers => _t('scan_answers');
+  String get sendToStudents => _t('send_to_students');
+  String get sendAgain => _t('send_again');
+  String get notSentYet => _t('not_sent_yet');
+  String get sentToStudents => _t('sent_to_students');
   String get scanUpload => _t('scan_upload');
   String get scanEmpty => _t('scan_empty');
   String get scanReading => _t('scan_reading');
@@ -137,6 +140,51 @@ class S {
   String get passwordTooShort => _t('password_too_short');
   String get lockedTitle => _t('locked_title');
   String get backToLogin => _t('back_to_login');
+
+  // Solution sheet (yechim varag'i)
+  String get solutionUploadTitle => _t('solution_upload_title');
+  String get solutionUploadBody => _t('solution_upload_body');
+  String get solutionConventionTitle => _t('solution_convention_title');
+  String get solutionConvention1 => _t('solution_convention_1');
+  String get solutionConvention2 => _t('solution_convention_2');
+  String get solutionConvention3 => _t('solution_convention_3');
+  String get solutionRetryNotice => _t('solution_retry_notice');
+  String get solutionCamera => _t('solution_camera');
+  String get solutionGallery => _t('solution_gallery');
+  String get solutionPagesLabel => _t('solution_pages_label');
+  String get solutionUploadAndSubmit => _t('solution_upload_and_submit');
+  String get solutionUpload => _t('solution_upload');
+  String get solutionUploaded => _t('solution_uploaded');
+  String get solutionNeedOne => _t('solution_need_one');
+  String get solutionPendingTitle => _t('solution_pending_title');
+  String get solutionPendingRetry => _t('solution_pending_retry');
+  String get solutionAnalysis => _t('solution_analysis');
+  String get solutionRefresh => _t('solution_refresh');
+  String get solutionRefreshHint => _t('solution_refresh_hint');
+  String get solutionMethod => _t('solution_method');
+  String get solutionStrengths => _t('solution_strengths');
+  String get solutionWeaknesses => _t('solution_weaknesses');
+  String get solutionRecommendations => _t('solution_recommendations');
+  String get solutionLegibility => _t('solution_legibility');
+  String get solutionErrors => _t('solution_errors');
+  String get solutionGuessed => _t('solution_guessed');
+  String get solutionNoWork => _t('solution_no_work');
+  String get solutionQuestions => _t('solution_questions');
+  String get solutionQuestionSuffix => _t('solution_question_suffix');
+  String get solutionRequiredToggle => _t('solution_required_toggle');
+  String get solutionRequiredHint => _t('solution_required_hint');
+  String get solutionSamplePdf => _t('solution_sample_pdf');
+  String get solutionRequiredNote => _t('solution_required_note');
+  String get guessSuspected => _t('guess_suspected');
+
+  /// `waiting` · `analyzing` · `done` · `failed`, or null for "not uploaded".
+  String solutionStateLabel(String? wire) => _t('solution_state_${wire ?? 'none'}');
+
+  /// `calculation` · `formula` · … · `none`.
+  String solutionErrorType(String wire) => _t('solution_error_$wire');
+
+  /// `full` · `partial` · `none`.
+  String solutionWork(String wire) => _t('solution_work_$wire');
 
   // Tabs
   String get tabHome => _t('tab_home');
@@ -325,9 +373,7 @@ class S {
       'question_type_single_choice': 'Bitta to\'g\'ri javob',
       'question_type_multiple_choice': 'Bir nechta to\'g\'ri javob',
       'question_type_image_based': 'Rasmli',
-      'question_type_audio_based': 'Audioli',
       'question_type_drag_and_drop': 'Moslashtirish',
-      'play_audio': 'Audioni ijro etish',
       'drag_and_drop_hint': 'Har bir raqamga mos harfni tanlang.',
       'drag_and_drop_pick': 'Tanlang',
       'media_not_attached': 'Fayl biriktirilmagan',
@@ -340,6 +386,7 @@ class S {
       'show_answers': 'Topshirgach to\'g\'ri javobni ko\'rsatish',
       'show_explanation': 'Tushuntirish bilan ko\'rsatish',
       'allow_calculator': 'Kalkulyatorga ruxsat berish',
+      'with_images': 'Rasmli savollar (AI chizadi)',
       'view_variants': 'Variantlarni ko\'rish',
       'common_paper': 'Umumiy variant',
       'generate': 'Testni yaratish',
@@ -365,6 +412,10 @@ class S {
       'pdf_preparing': 'PDF tayyorlanmoqda...',
       'pdf_failed': 'PDF olishda xatolik yuz berdi.',
       'scan_answers': 'Qog\'oz javoblarini skanerlash',
+      'send_to_students': 'O\'quvchilarga yuborish',
+      'send_again': 'Qayta yuborish',
+      'not_sent_yet': 'Test hali yuborilmagan — o\'quvchilar uni ko\'rmaydi',
+      'sent_to_students': 'Yuborildi',
       'scan_upload': 'Suratlarni tanlash',
       'scan_empty': 'Hali skan qilingan varaq yo\'q.',
       'scan_reading': 'O\'qilmoqda',
@@ -546,6 +597,58 @@ class S {
       'wd_4': 'Pa',
       'wd_5': 'Ju',
       'wd_6': 'Sh',
+      'solution_upload_title': 'Ishlangan varag\'ingizni yuklang',
+      'solution_upload_body':
+          'O\'qituvchingiz yechimlar yozilgan varaqni so\'ragan. Har bir sahifani aniq rasmga oling — sun\'iy intellekt ishlash usulingizni tahlil qiladi. Rasmlar tahlildan so\'ng o\'chiriladi.',
+      'solution_convention_title': 'Varaq qanday to\'ldiriladi',
+      'solution_convention_1': 'Hoshiyaga savol raqamini yozing: 1',
+      'solution_convention_2': 'Savolni yechib, ostiga gorizontal chiziq torting',
+      'solution_convention_3': 'Keyin 2, 3 va hokazo — xuddi shunday davom eting',
+      'solution_retry_notice': 'Oldingi varaqni o\'qib bo\'lmadi. Yorug\'roq joyda, aniqroq rasmga olib qayta yuklang.',
+      'solution_camera': 'Kamera',
+      'solution_gallery': 'Galereya',
+      'solution_pages_label': 'Sahifalar',
+      'solution_upload_and_submit': 'Yuklash va topshirish',
+      'solution_upload': 'Yuklash',
+      'solution_uploaded': 'Varaq yuklandi',
+      'solution_need_one': 'Kamida bitta sahifa rasmini qo\'shing.',
+      'solution_pending_title': 'Ishlangan varaqni yuklang',
+      'solution_pending_retry': 'Varaq o\'qilmadi — qayta yuklang',
+      'solution_analysis': 'Yechim tahlili',
+      'solution_refresh': 'Yangilash',
+      'solution_refresh_hint': 'Tahlil odatda bir necha daqiqa oladi.',
+      'solution_method': 'Ishlash uslubi',
+      'solution_strengths': 'Kuchli tomonlar',
+      'solution_weaknesses': 'Zaif tomonlar',
+      'solution_recommendations': 'Tavsiyalar',
+      'solution_legibility': 'Yozuv o\'qilishi',
+      'solution_errors': 'Xatolar',
+      'solution_guessed': 'Taxmin',
+      'solution_no_work': 'Yechimsiz',
+      'solution_questions': 'Savollar bo\'yicha',
+      'solution_question_suffix': 'savol',
+      'solution_required_toggle': 'Yechim varag\'ini talab qilish',
+      'solution_required_hint':
+          'O\'quvchi test oxirida ishlangan varag\'ini rasmga olib yuklaydi; AI yechim usulini tahlil qiladi.',
+      'solution_sample_pdf': 'Namuna varaq (PDF)',
+      'solution_required_note': 'Ishlangan varaq talab qilinadi',
+      'guess_suspected': 'Taxmin qilingan bo\'lishi mumkin',
+      'solution_state_waiting': 'Tahlilni kutmoqda',
+      'solution_state_analyzing': 'Tahlil qilinmoqda',
+      'solution_state_done': 'Tahlil tayyor',
+      'solution_state_failed': 'O\'qib bo\'lmadi — qayta yuklang',
+      'solution_state_none': 'Yuklanmagan',
+      'solution_error_calculation': 'Hisoblash xatosi',
+      'solution_error_formula': 'Formula xatosi',
+      'solution_error_concept': 'Tushuncha xatosi',
+      'solution_error_units': 'Birlik xatosi',
+      'solution_error_misread': 'Savolni noto\'g\'ri tushungan',
+      'solution_error_incomplete': 'Oxiriga yetkazmagan',
+      'solution_error_no_work': 'Yechim yozilmagan',
+      'solution_error_none': 'Xatosiz',
+      'solution_work_full': 'To\'liq yechim',
+      'solution_work_partial': 'Qisman',
+      'solution_work_none': 'Yechim yo\'q',
       'wd_7': 'Ya',
     },
     'ru': {
@@ -579,9 +682,7 @@ class S {
       'question_type_single_choice': 'Один правильный ответ',
       'question_type_multiple_choice': 'Несколько правильных ответов',
       'question_type_image_based': 'С изображением',
-      'question_type_audio_based': 'С аудио',
       'question_type_drag_and_drop': 'Сопоставление',
-      'play_audio': 'Воспроизвести аудио',
       'drag_and_drop_hint': 'Выберите подходящую букву для каждого номера.',
       'drag_and_drop_pick': 'Выбрать',
       'media_not_attached': 'Файл не прикреплён',
@@ -594,6 +695,7 @@ class S {
       'show_answers': 'Показать правильный ответ после сдачи',
       'show_explanation': 'Показывать с объяснением',
       'allow_calculator': 'Разрешить калькулятор',
+      'with_images': 'Вопросы с картинками (рисует ИИ)',
       'view_variants': 'Посмотреть варианты',
       'common_paper': 'Общий вариант',
       'generate': 'Создать тест',
@@ -619,6 +721,10 @@ class S {
       'pdf_preparing': 'PDF готовится...',
       'pdf_failed': 'Не удалось получить PDF.',
       'scan_answers': 'Сканировать бумажные ответы',
+      'send_to_students': 'Отправить ученикам',
+      'send_again': 'Отправить повторно',
+      'not_sent_yet': 'Тест ещё не отправлен — ученики его не видят',
+      'sent_to_students': 'Отправлено',
       'scan_upload': 'Выбрать фото',
       'scan_empty': 'Пока нет отсканированных листов.',
       'scan_reading': 'Читается',
@@ -800,6 +906,58 @@ class S {
       'wd_4': 'Чт',
       'wd_5': 'Пт',
       'wd_6': 'Сб',
+      'solution_upload_title': 'Загрузите лист с решениями',
+      'solution_upload_body':
+          'Учитель попросил лист с вашими решениями. Сфотографируйте каждую страницу чётко — ИИ разберёт ваш способ решения. Фото удаляются после анализа.',
+      'solution_convention_title': 'Как заполнять лист',
+      'solution_convention_1': 'На полях напишите номер вопроса: 1',
+      'solution_convention_2': 'Решите и проведите под решением горизонтальную линию',
+      'solution_convention_3': 'Дальше 2, 3 и так далее — точно так же',
+      'solution_retry_notice': 'Прошлый лист не удалось прочитать. Сфотографируйте при хорошем свете и загрузите снова.',
+      'solution_camera': 'Камера',
+      'solution_gallery': 'Галерея',
+      'solution_pages_label': 'Страницы',
+      'solution_upload_and_submit': 'Загрузить и сдать',
+      'solution_upload': 'Загрузить',
+      'solution_uploaded': 'Лист загружен',
+      'solution_need_one': 'Добавьте фото хотя бы одной страницы.',
+      'solution_pending_title': 'Загрузите лист с решениями',
+      'solution_pending_retry': 'Лист не прочитан — загрузите снова',
+      'solution_analysis': 'Разбор решений',
+      'solution_refresh': 'Обновить',
+      'solution_refresh_hint': 'Анализ обычно занимает несколько минут.',
+      'solution_method': 'Способ решения',
+      'solution_strengths': 'Сильные стороны',
+      'solution_weaknesses': 'Слабые стороны',
+      'solution_recommendations': 'Рекомендации',
+      'solution_legibility': 'Разборчивость',
+      'solution_errors': 'Ошибки',
+      'solution_guessed': 'Угадано',
+      'solution_no_work': 'Без решения',
+      'solution_questions': 'По вопросам',
+      'solution_question_suffix': 'вопрос',
+      'solution_required_toggle': 'Требовать лист с решениями',
+      'solution_required_hint':
+          'В конце теста ученик фотографирует лист с решениями; ИИ разбирает способ решения.',
+      'solution_sample_pdf': 'Образец листа (PDF)',
+      'solution_required_note': 'Требуется лист с решениями',
+      'guess_suspected': 'Возможно, угадано',
+      'solution_state_waiting': 'Ожидает анализа',
+      'solution_state_analyzing': 'Анализируется',
+      'solution_state_done': 'Анализ готов',
+      'solution_state_failed': 'Не удалось прочитать — загрузите снова',
+      'solution_state_none': 'Не загружен',
+      'solution_error_calculation': 'Ошибка в вычислениях',
+      'solution_error_formula': 'Ошибка в формуле',
+      'solution_error_concept': 'Ошибка в понимании',
+      'solution_error_units': 'Ошибка в единицах',
+      'solution_error_misread': 'Неверно понял вопрос',
+      'solution_error_incomplete': 'Не довёл до конца',
+      'solution_error_no_work': 'Решение не записано',
+      'solution_error_none': 'Без ошибок',
+      'solution_work_full': 'Полное решение',
+      'solution_work_partial': 'Частично',
+      'solution_work_none': 'Нет решения',
       'wd_7': 'Вс',
     },
     'en': {
@@ -833,9 +991,7 @@ class S {
       'question_type_single_choice': 'Single correct answer',
       'question_type_multiple_choice': 'Multiple correct answers',
       'question_type_image_based': 'Image-based',
-      'question_type_audio_based': 'Audio-based',
       'question_type_drag_and_drop': 'Matching',
-      'play_audio': 'Play audio',
       'drag_and_drop_hint': 'Pick the matching letter for each number.',
       'drag_and_drop_pick': 'Pick',
       'media_not_attached': 'No file attached',
@@ -848,6 +1004,7 @@ class S {
       'show_answers': 'Show the correct answer after submitting',
       'show_explanation': 'Show with an explanation',
       'allow_calculator': 'Allow a calculator',
+      'with_images': 'Illustrated questions (AI draws them)',
       'view_variants': 'View variants',
       'common_paper': 'Common variant',
       'generate': 'Generate the test',
@@ -873,6 +1030,10 @@ class S {
       'pdf_preparing': 'Preparing the PDF...',
       'pdf_failed': 'Could not get the PDF.',
       'scan_answers': 'Scan paper answers',
+      'send_to_students': 'Send to students',
+      'send_again': 'Send again',
+      'not_sent_yet': 'Not sent yet — students cannot see this test',
+      'sent_to_students': 'Sent',
       'scan_upload': 'Choose photos',
       'scan_empty': 'No scanned sheets yet.',
       'scan_reading': 'Reading',
@@ -1054,6 +1215,58 @@ class S {
       'wd_4': 'Thu',
       'wd_5': 'Fri',
       'wd_6': 'Sat',
+      'solution_upload_title': 'Upload your worked solutions',
+      'solution_upload_body':
+          'Your teacher asked for the sheet you solved on. Photograph each page clearly — AI will review how you worked. Photos are deleted after the analysis.',
+      'solution_convention_title': 'How to fill in the sheet',
+      'solution_convention_1': 'Write the question number in the margin: 1',
+      'solution_convention_2': 'Solve it, then draw a horizontal line under it',
+      'solution_convention_3': 'Then 2, 3 and so on — the same way',
+      'solution_retry_notice': 'The last sheet could not be read. Take a sharper photo in good light and upload again.',
+      'solution_camera': 'Camera',
+      'solution_gallery': 'Gallery',
+      'solution_pages_label': 'Pages',
+      'solution_upload_and_submit': 'Upload and submit',
+      'solution_upload': 'Upload',
+      'solution_uploaded': 'Sheet uploaded',
+      'solution_need_one': 'Add a photo of at least one page.',
+      'solution_pending_title': 'Upload your worked sheet',
+      'solution_pending_retry': 'Sheet unreadable — upload again',
+      'solution_analysis': 'Solution analysis',
+      'solution_refresh': 'Refresh',
+      'solution_refresh_hint': 'The analysis usually takes a few minutes.',
+      'solution_method': 'Working style',
+      'solution_strengths': 'Strengths',
+      'solution_weaknesses': 'Weaknesses',
+      'solution_recommendations': 'Recommendations',
+      'solution_legibility': 'Legibility',
+      'solution_errors': 'Mistakes',
+      'solution_guessed': 'Guessed',
+      'solution_no_work': 'No work',
+      'solution_questions': 'By question',
+      'solution_question_suffix': 'question',
+      'solution_required_toggle': 'Require a worked solution sheet',
+      'solution_required_hint':
+          'At the end of the test the student photographs their worked sheet; AI reviews how they solved it.',
+      'solution_sample_pdf': 'Sample sheet (PDF)',
+      'solution_required_note': 'Worked solution sheet required',
+      'guess_suspected': 'Possibly guessed',
+      'solution_state_waiting': 'Waiting for analysis',
+      'solution_state_analyzing': 'Analyzing',
+      'solution_state_done': 'Analysis ready',
+      'solution_state_failed': 'Unreadable — upload again',
+      'solution_state_none': 'Not uploaded',
+      'solution_error_calculation': 'Calculation error',
+      'solution_error_formula': 'Formula error',
+      'solution_error_concept': 'Concept error',
+      'solution_error_units': 'Units error',
+      'solution_error_misread': 'Misread the question',
+      'solution_error_incomplete': 'Did not finish',
+      'solution_error_no_work': 'No work written',
+      'solution_error_none': 'No mistakes',
+      'solution_work_full': 'Full solution',
+      'solution_work_partial': 'Partial',
+      'solution_work_none': 'No solution',
       'wd_7': 'Sun',
     },
   };

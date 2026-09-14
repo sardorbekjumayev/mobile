@@ -3,6 +3,7 @@ import '../../core/api/envelope.dart';
 import '../../core/util/json.dart';
 import '../models/exam_models.dart';
 import '../models/rank_models.dart';
+import '../models/solution_models.dart';
 import '../models/student_models.dart';
 import '../models/teacher_models.dart'
     show TestDifficulty, TeacherProgram, TeacherQuota, GenerationJob;
@@ -42,7 +43,7 @@ class StudentRepository {
   /// `(student_test_id, question_id)`, so a retry after a flaky connection
   /// never duplicates a row or double-counts a question.
   ///
-  /// Exactly one of [chosenIndex] (single_choice/image_based/audio_based),
+  /// Exactly one of [chosenIndex] (single_choice/image_based),
   /// [chosenIndexes] (multiple_choice) or [dragAnswer] (drag_and_drop) is
   /// set, matching the question's own type — see `AnswerInput`.
   Future<AnswerAck> answer({
@@ -76,6 +77,16 @@ class StudentRepository {
     });
     return SubmitOutcome.fromJson(asMap(data));
   }
+
+  /// The worked solution sheet — every page in one multipart request under
+  /// the repeated `files` field. `20813` means one is already on file.
+  Future<Solution?> uploadSolution(String testId, List<String> filePaths) async =>
+      Solution.maybe(
+        await _api.uploadFiles('/test/$testId/solution', field: 'files', filePaths: filePaths),
+      );
+
+  Future<SolutionStatus> solution(String testId) async =>
+      SolutionStatus.fromJson(asMap(await _api.get('/test/$testId/solution')));
 
   Future<TestResult> result(String testId) async =>
       TestResult.fromJson(asMap(await _api.get('/test/$testId/result')));

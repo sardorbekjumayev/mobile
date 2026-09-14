@@ -39,6 +39,23 @@ class AppConfig {
     return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
   }
 
+  /// The center panel's public origin — where static documents such as the
+  /// solution-sheet sample live. On this deployment the API and the panel are
+  /// sibling hosts (`api.<domain>` / `panel.<domain>`), so the panel origin is
+  /// derived from [baseUrl] unless `STEPIX_PANEL_URL` names it outright.
+  static String get centerPanelUrl {
+    const override = String.fromEnvironment('STEPIX_PANEL_URL');
+    if (override.isNotEmpty) {
+      return override.endsWith('/') ? override.substring(0, override.length - 1) : override;
+    }
+    final api = Uri.parse(baseUrl);
+    final host = api.host.startsWith('api.') ? 'panel.${api.host.substring(4)}' : api.host;
+    return Uri(scheme: api.scheme, host: host, port: api.hasPort ? api.port : null).toString();
+  }
+
+  /// The printable sample of the worked-solution sheet convention.
+  static String get solutionSampleUrl => '$centerPanelUrl/yechim-varagi-namuna.pdf';
+
   /// True when [baseUrl] is not TLS — the one case where a failure is more
   /// likely to be the dev machine than the phone's connection.
   static bool get isInsecureBaseUrl => !baseUrl.startsWith('https://');

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/tokens.dart';
-import '../../core/util/launcher.dart';
 import '../../data/models/exam_models.dart' show DragItems;
 import '../../data/models/teacher_models.dart';
 import '../../data/repositories/teacher_repository.dart';
@@ -162,10 +161,7 @@ class _PaperQuestionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            if (question.isImage)
-              _MediaPreview(url: question.mediaUrl, icon: Icons.image_outlined)
-            else if (question.isAudio)
-              _MediaPreview(url: question.mediaUrl, icon: Icons.volume_up_rounded),
+            if (question.isImage) _MediaPreview(url: question.mediaUrl),
             if (question.isDragAndDrop)
               _DragAndDropKey(drag: question.dragItems)
             else
@@ -177,7 +173,7 @@ class _PaperQuestionCard extends StatelessWidget {
                       ? (question.answerIndexes?.contains(i) ?? false)
                       : i == question.answerIndex,
                 ),
-            if ((question.isImage || question.isAudio) && question.mediaUrl == null)
+            if (question.isImage && question.mediaUrl == null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
@@ -234,58 +230,29 @@ class _KeyOptionRow extends StatelessWidget {
   }
 }
 
-/// `image_based`/`audio_based` — a thumbnail, or a play affordance that opens
-/// the file externally (the app has no in-app audio player yet).
+/// `image_based` — the attached image, as a thumbnail.
 class _MediaPreview extends StatelessWidget {
-  const _MediaPreview({required this.url, required this.icon});
+  const _MediaPreview({required this.url});
 
   final String? url;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     if (url == null) return const SizedBox.shrink();
-    final isImage = icon == Icons.image_outlined;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: isImage
-          ? ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-              child: AspectRatio(
-                aspectRatio: 16 / 10,
-                child: Image.network(
-                  url!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => Container(
-                    color: AppColors.surface2,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image_outlined, color: AppColors.faint),
-                  ),
-                ),
-              ),
-            )
-          : Material(
-              color: AppColors.blueTint2,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-              child: InkWell(
-                onTap: () => openExternal(context, url),
-                borderRadius: const BorderRadius.all(Radius.circular(14)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.violet),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(S.of(context).playAudio, style: const TextStyle(fontSize: 12.5)),
-                      ),
-                      const Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.faint),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        child: AspectRatio(
+          aspectRatio: 16 / 10,
+          child: Image.network(
+            url!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
     );
   }
 }

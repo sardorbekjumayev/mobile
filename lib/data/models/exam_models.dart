@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'solution_models.dart';
 
 /// `POST /test/:id/start`.
 ///
@@ -12,6 +13,8 @@ class TestAttempt {
     required this.questions,
     this.expiresAt,
     this.timeLimitMin,
+    this.solutionRequired = false,
+    this.solutionPages = 0,
   });
 
   factory TestAttempt.fromJson(Map<String, dynamic> j) => TestAttempt(
@@ -21,6 +24,8 @@ class TestAttempt {
           ..sort((a, b) => a.position.compareTo(b.position)),
         expiresAt: asDate(j['expires_at']),
         timeLimitMin: asIntOrNull(j['time_limit_min']),
+        solutionRequired: asBool(j['solution_required']),
+        solutionPages: asInt(j['solution_pages']),
       );
 
   final String studentTestId;
@@ -34,6 +39,10 @@ class TestAttempt {
 
   /// The test's own limit, and the ceiling on [remaining].
   final int? timeLimitMin;
+
+  /// Submit is refused (`20811`) until the worked solution sheet is uploaded.
+  final bool solutionRequired;
+  final int solutionPages;
 
   /// Time left, clamped to the test's limit.
   ///
@@ -60,7 +69,6 @@ class QuestionKind {
   static const singleChoice = 'single_choice';
   static const multipleChoice = 'multiple_choice';
   static const imageBased = 'image_based';
-  static const audioBased = 'audio_based';
   static const dragAndDrop = 'drag_and_drop';
 }
 
@@ -69,7 +77,6 @@ String questionTypeOf(dynamic v) {
     QuestionKind.singleChoice,
     QuestionKind.multipleChoice,
     QuestionKind.imageBased,
-    QuestionKind.audioBased,
     QuestionKind.dragAndDrop,
   };
   final s = v?.toString();
@@ -135,8 +142,7 @@ class ExamQuestion {
   final String? skill;
   final QuestionFigure? figure;
 
-  /// `image_based`/`audio_based` — the attached file, once a teacher has
-  /// attached one. Null means "not attached yet", which a `ready` test can
+  /// `image_based` — the attached file, once a teacher has attached one. Null means "not attached yet", which a `ready` test can
   /// never actually reach the student with (`start` refuses it server-side),
   /// so in practice this is only ever null while the question type itself is
   /// unset — see `QuestionKind`'s own doc.
@@ -147,7 +153,13 @@ class ExamQuestion {
   bool get isMultipleChoice => type == QuestionKind.multipleChoice;
   bool get isDragAndDrop => type == QuestionKind.dragAndDrop;
   bool get isImage => type == QuestionKind.imageBased;
-  bool get isAudio => type == QuestionKind.audioBased;
+
+  /// Whether this question has a picture to show at all.
+  ///
+  /// An `image_based` question's picture is the stimulus, but an illustrated
+  /// test also draws pictures for ordinary questions — and a picture the
+  /// center paid to generate has to reach the student who is answering.
+  bool get hasMedia => mediaUrl != null && mediaUrl!.isNotEmpty;
 }
 
 /// A drawing spec for geometry and physics questions, rendered on a 320×220
@@ -302,6 +314,9 @@ class TestResult {
     required this.questions,
     this.submittedAt,
     this.durationSec = 0,
+    this.solutionRequired = false,
+    this.solutionPages = 0,
+    this.solution,
   });
 
   factory TestResult.fromJson(Map<String, dynamic> j) => TestResult(
@@ -315,6 +330,9 @@ class TestResult {
           ..sort((a, b) => a.position.compareTo(b.position)),
         submittedAt: asDate(j['submitted_at']),
         durationSec: asInt(j['duration_sec']),
+        solutionRequired: asBool(j['solution_required']),
+        solutionPages: asInt(j['solution_pages']),
+        solution: Solution.maybe(j['solution']),
       );
 
   final String testId;
@@ -326,6 +344,12 @@ class TestResult {
   final List<ResultQuestion> questions;
   final DateTime? submittedAt;
   final int durationSec;
+
+  final bool solutionRequired;
+  final int solutionPages;
+
+  /// Null when no sheet has been uploaded.
+  final Solution? solution;
 
   /// True when the center turned answer review off — the score stands alone.
   bool get answersHidden => questions.isEmpty || questions.every((q) => !q.hasAnswerKey);

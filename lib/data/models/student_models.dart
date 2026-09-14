@@ -1,4 +1,5 @@
 import '../../core/util/json.dart';
+import 'solution_models.dart';
 import 'session_models.dart' show initialsOf;
 
 /// A test as it appears in a list or on the home card.
@@ -15,6 +16,9 @@ class TestSummary {
     this.dueAt,
     this.score,
     this.attemptsLeft = 0,
+    this.solutionRequired = false,
+    this.solutionPages = 0,
+    this.solutionState,
   });
 
   factory TestSummary.fromJson(Map<String, dynamic> j) => TestSummary(
@@ -32,6 +36,9 @@ class TestSummary {
         dueAt: asDate(j['due_at']),
         score: asIntOrNull(j['score']),
         attemptsLeft: asInt(j['attempts_left']),
+        solutionRequired: asBool(j['solution_required']),
+        solutionPages: asInt(j['solution_pages']),
+        solutionState: SolutionState.parse(j['solution_state']),
       );
 
   final String id;
@@ -45,6 +52,13 @@ class TestSummary {
   final DateTime? dueAt;
   final int? score;
   final int attemptsLeft;
+
+  /// The teacher asked for a photographed worked solution sheet.
+  final bool solutionRequired;
+  final int solutionPages;
+
+  /// Null until a sheet is uploaded.
+  final SolutionState? solutionState;
 
   bool get isPending => state != TestState.submitted;
 
@@ -87,6 +101,7 @@ class StudentHome {
     this.rank,
     this.advice,
     this.emptyState,
+    this.pendingSolutions = const [],
   });
 
   factory StudentHome.fromJson(Map<String, dynamic> j) => StudentHome(
@@ -100,6 +115,7 @@ class StudentHome {
         rank: asIntOrNull(j['rank']),
         advice: asStringOrNull(j['advice']),
         emptyState: asStringOrNull(j['empty_state']),
+        pendingSolutions: mapList(j['pending_solutions'], PendingSolution.fromJson),
       );
 
   final String greeting;
@@ -120,6 +136,9 @@ class StudentHome {
   /// The most common state for a brand-new account, and the least worth
   /// rendering as a wall of zeroes.
   final String? emptyState;
+
+  /// Graded tests still waiting for their worked solution sheet.
+  final List<PendingSolution> pendingSolutions;
 
   bool get hasNoGroup => emptyState == 'no_group';
 

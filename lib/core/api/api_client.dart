@@ -25,6 +25,10 @@ abstract class ApiClient {
   /// and by the paper-scan upload, which calls it once per photo.
   Future<dynamic> upload(String path, {required String field, required String filePath});
 
+  /// Multipart upload of several files under one repeated [field] — the
+  /// solution sheet, whose pages have to arrive as a single request.
+  Future<dynamic> uploadFiles(String path, {required String field, required List<String> filePaths});
+
   /// Raw bytes rather than the JSON envelope — for `POST .../pdf`, the one
   /// response on the API that is not JSON.
   Future<List<int>> downloadBytes(String path, {Object? body});
@@ -103,6 +107,20 @@ class DioApiClient implements ApiClient {
   }
 
   @override
+  Future<dynamic> uploadFiles(
+    String path, {
+    required String field,
+    required List<String> filePaths,
+  }) async {
+    final form = FormData();
+    for (final filePath in filePaths) {
+      form.files.add(MapEntry(field, await MultipartFile.fromFile(filePath)));
+    }
+    // Several phone photos on a slow connection outlast the default 30s.
+    return _send('POST', path, body: form, sendTimeout: const Duration(minutes: 3));
+  }
+
+  @override
   Future<List<int>> downloadBytes(String path, {Object? body}) async {
     final Response<List<int>> response;
     try {
@@ -171,6 +189,7 @@ class DioApiClient implements ApiClient {
     Map<String, dynamic>? query,
     bool allowRetry = true,
     bool allowNetworkRetry = true,
+    Duration? sendTimeout,
   }) async {
     final Response<dynamic> response;
     try {
@@ -178,7 +197,7 @@ class DioApiClient implements ApiClient {
         path,
         data: body,
         queryParameters: query,
-        options: Options(method: method, headers: await _headers()),
+        options: Options(method: method, headers: await _headers(), sendTimeout: sendTimeout),
       );
     } on DioException catch (e) {
       // A phone handing the radio back from Wi-Fi to LTE drops exactly one
@@ -212,7 +231,15 @@ class DioApiClient implements ApiClient {
     if (failure.isUnauthenticated && allowRetry && !_isAuthEndpoint(path)) {
       final refreshed = await _refresh();
       if (refreshed != null) {
-        return _send(method, path, body: body, query: query, allowRetry: false);
+        // A FormData is finalized once sent; the retry needs a fresh copy.
+        return _send(
+          method,
+          path,
+          body: body is FormData ? body.clone() : body,
+          query: query,
+          allowRetry: false,
+          sendTimeout: sendTimeout,
+        );
       }
       await onSessionExpired?.call();
     }

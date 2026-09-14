@@ -19,6 +19,12 @@
 	<!-- ATS o'z holicha qoladi: API HTTPS'da, shuning uchun hech qanday
 	     "arbitrary loads" istisnosi kerak emas. NSAllowsLocalNetworking faqat
 	     simulyatorda localhost:3003 ga qarab ishlash uchun. -->
+	<!-- image_picker: skan qilingan javob varaqlari va ishlangan yechim
+	     varag'ini rasmga olish uchun. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Ishlangan yechim varag'i va javob varaqlarini rasmga olish uchun kamera kerak.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Yechim varag'i va javob varaqlari rasmlarini galereyadan tanlash uchun.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

@@ -20,6 +20,7 @@ import '../features/student/home_screen.dart';
 import '../features/student/rank_screen.dart';
 import '../features/student/student_practice_screen.dart';
 import '../features/student/test_cover_screen.dart';
+import '../features/student/solution_upload_screen.dart';
 import '../features/student/test_result_screen.dart';
 import '../features/student/test_runner_screen.dart';
 import '../features/student/tests_screen.dart';
@@ -160,6 +161,15 @@ GoRouter createRouter({
           GoRoute(
             path: 'result',
             builder: (context, state) => TestResultScreen(testId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'solution',
+            builder: (context, state) => SolutionUploadScreen(
+              testId: state.pathParameters['id']!,
+              maxPages: int.tryParse(state.uri.queryParameters['pages'] ?? '') ?? 1,
+              retry: state.uri.queryParameters['retry'] == '1',
+              submitAfter: state.uri.queryParameters['submit'] == '1',
+            ),
           ),
         ],
       ),

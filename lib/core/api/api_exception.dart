@@ -48,6 +48,19 @@ class ErrorCodes {
 
   /// A second submit for the same attempt. The first submission stands.
   static const testAlreadySubmitted = 20802;
+
+  /// Submit refused: the test requires a worked solution sheet and none was
+  /// uploaded yet. The client shows the upload step and submits again.
+  static const solutionRequired = 20811;
+
+  /// The test does not ask for a solution sheet.
+  static const solutionNotRequested = 20812;
+
+  /// A sheet is already on file — nothing to upload, just carry on.
+  static const solutionAlreadyUploaded = 20813;
+
+  static const solutionTooManyPages = 20814;
+  static const solutionBadFile = 20815;
 }
 
 /// A failure that carries the server's own envelope.

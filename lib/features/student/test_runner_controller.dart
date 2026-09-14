@@ -13,7 +13,7 @@ enum RunnerPhase { loading, running, submitting, submitted, failed }
 class _Answer {
   const _Answer({this.single, this.multi, this.drag});
 
-  /// single_choice / image_based / audio_based.
+  /// single_choice / image_based.
   final int? single;
 
   /// multiple_choice.
@@ -37,6 +37,14 @@ class TestRunnerController extends ChangeNotifier {
   String? _error;
   SubmitOutcome? _outcome;
   Timer? _ticker;
+
+  /// Set once the worked solution sheet is on the server (or turned out to
+  /// be already), so a second finish does not ask for it again.
+  bool _solutionUploaded = false;
+
+  /// What the countdown does at zero. The screen points it at its own finish
+  /// flow, which shows the solution-sheet step before submitting.
+  Future<void> Function()? onTimeUp;
 
   /// questionId → this student's answer so far.
   final Map<String, _Answer> _answers = {};
@@ -64,7 +72,7 @@ class TestRunnerController extends ChangeNotifier {
 
   ExamQuestion? get current => _index < questions.length ? questions[_index] : null;
 
-  /// single_choice / image_based / audio_based only.
+  /// single_choice / image_based only.
   int? get chosenIndex => current == null ? null : _answers[current!.id]?.single;
 
   /// multiple_choice only.
@@ -101,6 +109,20 @@ class TestRunnerController extends ChangeNotifier {
 
   Duration? get remaining => _attempt?.remaining;
 
+  /// The test requires a worked solution sheet that has not been uploaded.
+  bool get needsSolution =>
+      ((_attempt?.solutionRequired ?? false) || _forceSolution) && !_solutionUploaded;
+
+  /// Submit answered `20811` even though `start` did not flag the test.
+  bool _forceSolution = false;
+
+  int get solutionPages => _attempt?.solutionPages ?? 1;
+
+  void markSolutionUploaded() {
+    _solutionUploaded = true;
+    notifyListeners();
+  }
+
   Future<void> start() async {
     _phase = RunnerPhase.loading;
     _error = null;
@@ -121,7 +143,7 @@ class TestRunnerController extends ChangeNotifier {
 
   /// Records the choice locally first, then pushes it. The endpoint upserts on
   /// `(student_test_id, question_id)`, so a retry can never double-count.
-  /// single_choice / image_based / audio_based.
+  /// single_choice / image_based.
   Future<void> chooseSingle(int optionIndex) async {
     final question = current;
     if (question == null) return;
@@ -233,6 +255,12 @@ class TestRunnerController extends ChangeNotifier {
         notifyListeners();
         return true;
       }
+      if (e.code == ErrorCodes.solutionRequired) {
+        // The server knows better than the start payload: ask for the sheet.
+        _attempt = attempt;
+        _solutionUploaded = false;
+        _forceSolution = true;
+      }
       _error = e.message;
       _phase = RunnerPhase.running;
       notifyListeners();
@@ -279,7 +307,7 @@ class TestRunnerController extends ChangeNotifier {
       final left = remaining;
       if (left != null && left == Duration.zero) {
         _ticker?.cancel();
-        unawaited(submit());
+        unawaited(onTimeUp != null ? onTimeUp!() : submit());
       }
       notifyListeners();
     });

@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
-import '../../core/util/launcher.dart';
 import '../../data/models/exam_models.dart';
 import '../../data/repositories/student_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
 import 'figure_view.dart';
+import 'solution_upload_screen.dart';
 import 'test_runner_controller.dart';
 
 /// M8 — the test runner. One question at a time, answers pushed as they are
@@ -33,6 +33,7 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
       repository: context.read<StudentRepository>(),
       testId: widget.testId,
     );
+    _controller.onTimeUp = _finish;
     _controller.start();
   }
 
@@ -67,15 +68,52 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
       _controller.next();
       return;
     }
-    final done = await _controller.submit();
-    if (!mounted) return;
-    if (done) {
-      context.pushReplacement('/student/test/${widget.testId}/result');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.error ?? s.somethingWentWrong)),
-      );
+    await _finish(s);
+  }
+
+  bool _finishing = false;
+
+  /// Finish — from the last question or from the countdown reaching zero.
+  ///
+  /// A test that requires the worked solution sheet shows the upload step
+  /// first; backing out of it leaves the student in the runner, and submit is
+  /// never called without the sheet (the server would refuse with `20811`).
+  Future<void> _finish([S? strings]) async {
+    if (_finishing || !mounted) return;
+    _finishing = true;
+    try {
+      final s = strings ?? S.of(context);
+      if (_controller.needsSolution && !await _askForSolution()) return;
+
+      var done = await _controller.submit();
+      if (!mounted) return;
+      // `20811`: the server wants the sheet after all — show the step once.
+      if (!done && _controller.needsSolution) {
+        if (!await _askForSolution()) return;
+        done = await _controller.submit();
+        if (!mounted) return;
+      }
+      if (done) {
+        context.pushReplacement('/student/test/${widget.testId}/result');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_controller.error ?? s.somethingWentWrong)),
+        );
+      }
+    } finally {
+      _finishing = false;
     }
+  }
+
+  Future<bool> _askForSolution() async {
+    final uploaded = await openSolutionUpload(
+      context,
+      testId: widget.testId,
+      pages: _controller.solutionPages,
+      submitAfter: true,
+    );
+    if (uploaded) _controller.markSolutionUploaded();
+    return uploaded && mounted;
   }
 
   @override
@@ -137,8 +175,7 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
                           ),
                           const SizedBox(height: 22),
                           if (question.figure != null) FigureView(figure: question.figure!),
-                          if (question.isImage) _MediaImage(url: question.mediaUrl),
-                          if (question.isAudio) _AudioTag(url: question.mediaUrl),
+                          if (question.mediaUrl != null) _MediaImage(url: question.mediaUrl!),
                           if (question.isMultipleChoice)
                             for (var i = 0; i < question.options.length; i++)
                               Padding(
@@ -351,83 +388,28 @@ class _Option extends StatelessWidget {
   }
 }
 
-/// `image_based` — the attached photo, or a hint that nothing's attached yet
-/// (which a `ready` test should never actually reach a student with, but a
-/// missing image must never crash the runner).
+/// The AI-drawn picture. Shown only when one exists; a question the AI could
+/// not illustrate simply has no picture slot at all.
 class _MediaImage extends StatelessWidget {
   const _MediaImage({required this.url});
 
-  final String? url;
+  final String url;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        child: AspectRatio(
-          aspectRatio: 16 / 10,
-          child: url == null
-              ? Container(
-                  color: AppColors.surface2,
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.image_not_supported_outlined, color: AppColors.faint),
-                )
-              : Image.network(
-                  url!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => Container(
-                    color: AppColors.surface2,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image_outlined, color: AppColors.faint),
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-/// `audio_based` — opens the clip in the device's own player rather than an
-/// in-app one; the app has no audio-playback dependency yet.
-class _AudioTag extends StatelessWidget {
-  const _AudioTag({required this.url});
-
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = S.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Material(
-        color: AppColors.blueTint2,
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        child: InkWell(
-          onTap: url == null ? null : () => openExternal(context, url),
-          borderRadius: const BorderRadius.all(Radius.circular(18)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            child: Row(
-              children: [
-                Icon(Icons.volume_up_rounded, color: context.brand.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    s.playAudio,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: context.brand.dark,
-                    ),
-                  ),
-                ),
-                Icon(Icons.open_in_new_rounded, size: 16, color: context.brand.primary),
-              ],
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      frameBuilder: (context, child, frame, _) => frame == null
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(18)),
+                child: AspectRatio(aspectRatio: 16 / 10, child: child),
+              ),
             ),
-          ),
-        ),
-      ),
+      errorBuilder: (context, error, stack) => const SizedBox.shrink(),
     );
   }
 }

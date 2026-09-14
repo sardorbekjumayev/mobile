@@ -27,6 +27,15 @@ class TeacherRepository {
   Future<TeacherTestDetail> test(String id) async =>
       TeacherTestDetail.fromJson(asMap(await _api.get('/teacher/test/$id')));
 
+  /// Send a reviewed test to its students — `POST /teacher/test/:id/publish`.
+  ///
+  /// Returns how many students were notified. Pressing it again is a reminder
+  /// to whoever has not started, not a second test.
+  Future<int> publishTest(String id) async {
+    final res = asMap(await _api.post('/teacher/test/$id/publish'));
+    return asInt(res['notified']);
+  }
+
   // ── test creation ──────────────────────────────────────────────────
 
   /// The teacher's own subject, its branches and their topics — one call, where
@@ -59,6 +68,8 @@ class TeacherRepository {
     TestFlags flags = const TestFlags(),
     DateTime? dueAt,
     Set<String> questionTypes = const {},
+    bool solutionRequired = false,
+    int solutionPages = 2,
   }) async {
     final data = await _api.post('/teacher/test/generate', body: {
       'topic_id': topicId,
@@ -72,6 +83,9 @@ class TeacherRepository {
       'flags': flags.toJson(),
       if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
       if (questionTypes.isNotEmpty) 'question_types': questionTypes.toList(),
+      'solution_required': solutionRequired,
+      // Pages only mean something when the sheet is required.
+      if (solutionRequired) 'solution_pages': solutionPages,
     });
     return GenerationJob.started(asMap(data));
   }

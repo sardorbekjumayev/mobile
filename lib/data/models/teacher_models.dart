@@ -1,6 +1,7 @@
 import '../../core/util/json.dart';
 import 'exam_models.dart' show DragItems, QuestionKind, questionTypeOf;
 import 'session_models.dart' show initialsOf;
+import 'solution_models.dart';
 import 'student_models.dart';
 
 /// `GET /teacher/home`.
@@ -315,6 +316,9 @@ class TeacherTest {
     required this.assignedCount,
     this.avgScore,
     this.dueAt,
+    this.publishedAt,
+    this.solutionRequired = false,
+    this.solutionPages = 0,
   });
 
   factory TeacherTest.fromJson(Map<String, dynamic> j) => TeacherTest(
@@ -331,6 +335,9 @@ class TeacherTest {
         assignedCount: asInt(j['assigned'] ?? j['assigned_count']),
         avgScore: asIntOrNull(j['avg_score']),
         dueAt: asDate(j['due_at']),
+        publishedAt: asDate(j['published_at']),
+        solutionRequired: asBool(j['solution_required']),
+        solutionPages: asInt(j['solution_pages']),
       );
 
   final String id;
@@ -342,6 +349,16 @@ class TeacherTest {
   final int assignedCount;
   final int? avgScore;
   final DateTime? dueAt;
+
+  /// When the test was sent to its students. Null means it is still in review
+  /// and nobody's app is showing it.
+  final DateTime? publishedAt;
+
+  bool get isPublished => publishedAt != null;
+
+  /// Students must upload a photographed worked solution sheet.
+  final bool solutionRequired;
+  final int solutionPages;
 
   double get progress => assignedCount == 0 ? 0 : submittedCount / assignedCount;
 
@@ -383,6 +400,7 @@ class TestParticipant {
     required this.state,
     this.score,
     this.submittedAt,
+    this.solutionState,
   });
 
   factory TestParticipant.fromJson(Map<String, dynamic> j) => TestParticipant(
@@ -398,6 +416,7 @@ class TestParticipant {
         state: TestState.parse(j['state']),
         score: asIntOrNull(j['score']),
         submittedAt: asDate(j['submitted_at']),
+        solutionState: SolutionState.parse(j['solution_state']),
       );
 
   final String studentId;
@@ -407,6 +426,9 @@ class TestParticipant {
   final TestState state;
   final int? score;
   final DateTime? submittedAt;
+
+  /// Null when no solution sheet is on file.
+  final SolutionState? solutionState;
 }
 
 enum AttendanceStatus {
@@ -556,6 +578,7 @@ class TestFlags {
     this.showAnswers = true,
     this.showExplanation = true,
     this.allowCalculator = false,
+    this.withImages = false,
   });
 
   final bool shuffleQuestions;
@@ -564,12 +587,17 @@ class TestFlags {
   final bool showExplanation;
   final bool allowCalculator;
 
+  /// Illustrated questions: the AI describes the picture a question needs and
+  /// an image model draws it. Off by default — every picture is a paid call.
+  final bool withImages;
+
   TestFlags copyWith({
     bool? shuffleQuestions,
     bool? shuffleAnswers,
     bool? showAnswers,
     bool? showExplanation,
     bool? allowCalculator,
+    bool? withImages,
   }) =>
       TestFlags(
         shuffleQuestions: shuffleQuestions ?? this.shuffleQuestions,
@@ -577,6 +605,7 @@ class TestFlags {
         showAnswers: showAnswers ?? this.showAnswers,
         showExplanation: showExplanation ?? this.showExplanation,
         allowCalculator: allowCalculator ?? this.allowCalculator,
+        withImages: withImages ?? this.withImages,
       );
 
   Map<String, dynamic> toJson() => {
@@ -585,6 +614,7 @@ class TestFlags {
         'show_answers': showAnswers,
         'show_explanation': showExplanation,
         'allow_calculator': allowCalculator,
+        'with_images': withImages,
       };
 }
 
@@ -712,6 +742,7 @@ class StudentAnswerSheet {
     required this.state,
     required this.questions,
     this.score,
+    this.solution,
   });
 
   factory StudentAnswerSheet.fromJson(Map<String, dynamic> j) => StudentAnswerSheet(
@@ -719,12 +750,16 @@ class StudentAnswerSheet {
         state: asString(j['state']),
         score: asIntOrNull(j['score']),
         questions: mapList(j['questions'], ReviewQuestion.fromJson),
+        solution: Solution.maybe(j['solution']),
       );
 
   final String fullName;
   final String state;
   final int? score;
   final List<ReviewQuestion> questions;
+
+  /// The worked solution sheet and its analysis, when one was uploaded.
+  final Solution? solution;
 }
 
 /// The score after `POST .../correct` re-grades a sheet.
@@ -798,7 +833,7 @@ class PaperQuestionKey {
   /// carries the answer key.
   final DragItems? dragItems;
 
-  /// `image_based`/`audio_based`.
+  /// `image_based`.
   final String? mediaUrl;
   final String? mediaHint;
 
@@ -807,7 +842,6 @@ class PaperQuestionKey {
   bool get isMultipleChoice => type == QuestionKind.multipleChoice;
   bool get isDragAndDrop => type == QuestionKind.dragAndDrop;
   bool get isImage => type == QuestionKind.imageBased;
-  bool get isAudio => type == QuestionKind.audioBased;
 }
 
 class PaperStudentRef {

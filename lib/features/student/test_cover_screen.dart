@@ -50,6 +50,8 @@ class TestCoverScreen extends StatelessWidget {
                   if (test.passScore != null)
                     _Row(label: s.passScore, value: '${test.passScore}'),
                   _Row(label: s.attemptsLabel, value: '${test.attemptsLeft}'),
+                  if (test.solutionRequired)
+                    _Row(label: s.solutionRequiredNote, value: '${test.solutionPages}'),
                   if (test.dueAt != null)
                     _Row(
                       label: s.due,

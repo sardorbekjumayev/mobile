@@ -10,7 +10,9 @@ import '../../l10n/strings.dart';
 import '../shared/widgets/analytics_cards.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import '../shared/widgets/solution_analysis.dart';
 import '../shared/widgets/user_header.dart';
+import 'solution_upload_screen.dart';
 
 /// M4 — `GET /home` plus `GET /group` for the group strip.
 class StudentHomeScreen extends StatelessWidget {
@@ -28,7 +30,7 @@ class StudentHomeScreen extends StatelessWidget {
         final groups = home.hasNoGroup ? <StudentGroup>[] : await repo.groups();
         return _HomeBundle(home, groups);
       },
-      builder: (context, bundle, refresh) => _HomeBody(bundle: bundle),
+      builder: (context, bundle, refresh) => _HomeBody(bundle: bundle, refresh: refresh),
     );
   }
 }
@@ -41,9 +43,10 @@ class _HomeBundle {
 }
 
 class _HomeBody extends StatelessWidget {
-  const _HomeBody({required this.bundle});
+  const _HomeBody({required this.bundle, required this.refresh});
 
   final _HomeBundle bundle;
+  final Future<void> Function() refresh;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +70,25 @@ class _HomeBody extends StatelessWidget {
         if (home.hasNoGroup)
           EmptyView(message: s.noGroupYet, icon: Icons.groups_2_outlined)
         else ...[
+          // Graded tests still missing their worked solution sheet — shown
+          // above everything else, the way a notification would be.
+          for (final pending in home.pendingSolutions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: SolutionUploadPrompt(
+                title: pending.title,
+                retry: pending.retry,
+                onTap: () async {
+                  final uploaded = await openSolutionUpload(
+                    context,
+                    testId: pending.testId,
+                    pages: pending.pages,
+                    retry: pending.retry,
+                  );
+                  if (uploaded) await refresh();
+                },
+              ),
+            ),
           _NextTestCard(test: home.nextTest),
           const SizedBox(height: 12),
           _StatsRow(home: home),

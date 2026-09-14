@@ -9,6 +9,7 @@ import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import '../shared/widgets/solution_analysis.dart';
 
 /// One student's sheet, question by question — the "tekshirish" screen.
 ///
@@ -72,6 +73,10 @@ class _TeacherStudentReviewScreenState extends State<TeacherStudentReviewScreen>
                     ),
                   ],
                   const SizedBox(height: 16),
+                  if (sheet.solution != null) ...[
+                    SolutionAnalysisSection(solution: sheet.solution, onRefresh: refresh),
+                    const SizedBox(height: 16),
+                  ],
                   if (!_canCorrect(sheet))
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
