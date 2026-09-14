@@ -119,8 +119,15 @@ class ExamQuestion {
     this.mediaUrl,
     this.mediaHint,
     this.dragItems,
+    this.givenIndex,
+    this.givenIndexes,
+    this.givenDrag,
   });
 
+  /// `POST /test/:id/start` sends a matching exercise's `items`/`targets` at
+  /// the top level of the question, not under `drag_items` — reading only the
+  /// nested key left every `drag_and_drop` question blank with its Next button
+  /// permanently disabled. Both shapes are accepted.
   factory ExamQuestion.fromJson(Map<String, dynamic> j) => ExamQuestion(
         id: asString(j['id']),
         position: asInt(j['position']),
@@ -131,7 +138,14 @@ class ExamQuestion {
         figure: j['figure'] == null ? null : QuestionFigure.fromJson(asMap(j['figure'])),
         mediaUrl: asStringOrNull(j['media_url']),
         mediaHint: asStringOrNull(j['media_hint']),
-        dragItems: j['drag_items'] == null ? null : DragItems.fromJson(j['drag_items']),
+        dragItems: j['drag_items'] != null
+            ? DragItems.fromJson(j['drag_items'])
+            : (j['items'] != null || j['targets'] != null)
+                ? DragItems(items: asStringList(j['items']), targets: asStringList(j['targets']))
+                : null,
+        givenIndex: asIntOrNull(j['chosen_index']),
+        givenIndexes: j['chosen_indexes'] == null ? null : asIntList(j['chosen_indexes']),
+        givenDrag: j['drag_answer'] == null ? null : asIntList(j['drag_answer']),
       );
 
   final String id;
@@ -149,6 +163,12 @@ class ExamQuestion {
   final String? mediaUrl;
   final String? mediaHint;
   final DragItems? dragItems;
+
+  /// What this student already answered, when `start` resumes an attempt
+  /// they left mid-way — so the runner reopens on their paper, not a blank one.
+  final int? givenIndex;
+  final List<int>? givenIndexes;
+  final List<int>? givenDrag;
 
   bool get isMultipleChoice => type == QuestionKind.multipleChoice;
   bool get isDragAndDrop => type == QuestionKind.dragAndDrop;

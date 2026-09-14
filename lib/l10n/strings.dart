@@ -54,6 +54,12 @@ class S {
   String get questionTypeDragAndDrop => _t('question_type_drag_and_drop');
   String get dragAndDropHint => _t('drag_and_drop_hint');
   String get dragAndDropPick => _t('drag_and_drop_pick');
+  String get multiChoiceHint => _t('multi_choice_hint');
+  String get previousQuestion => _t('previous_question');
+  String get unansweredTitle => _t('unanswered_title');
+  String unansweredBody(int n) => _t('unanswered_body').replaceAll('{n}', '$n');
+  String get finishAnyway => _t('finish_anyway');
+  String get keepAnswering => _t('keep_answering');
   String get mediaNotAttached => _t('media_not_attached');
   String get attachMedia => _t('attach_media');
   String get correctionUnsupportedType => _t('correction_unsupported_type');
@@ -376,6 +382,12 @@ class S {
       'question_type_drag_and_drop': 'Moslashtirish',
       'drag_and_drop_hint': 'Har bir raqamga mos harfni tanlang.',
       'drag_and_drop_pick': 'Tanlang',
+      'multi_choice_hint': "Bir nechta to'g'ri javobni belgilashingiz mumkin",
+      'previous_question': 'Oldingi',
+      'unanswered_title': 'Hamma savolga javob berilmagan',
+      'unanswered_body': '{n} ta savol javobsiz qoldi. Javobsiz savollar noto\'g\'ri hisoblanadi.',
+      'finish_anyway': 'Baribir yakunlash',
+      'keep_answering': 'Qaytish',
       'media_not_attached': 'Fayl biriktirilmagan',
       'attach_media': 'Fayl biriktirish',
       'correction_unsupported_type':
@@ -685,6 +697,12 @@ class S {
       'question_type_drag_and_drop': 'Сопоставление',
       'drag_and_drop_hint': 'Выберите подходящую букву для каждого номера.',
       'drag_and_drop_pick': 'Выбрать',
+      'multi_choice_hint': 'Можно отметить несколько правильных ответов',
+      'previous_question': 'Назад',
+      'unanswered_title': 'Ответы даны не на все вопросы',
+      'unanswered_body': 'Без ответа: {n}. Вопросы без ответа считаются неверными.',
+      'finish_anyway': 'Всё равно завершить',
+      'keep_answering': 'Вернуться',
       'media_not_attached': 'Файл не прикреплён',
       'attach_media': 'Прикрепить файл',
       'correction_unsupported_type':
@@ -994,6 +1012,12 @@ class S {
       'question_type_drag_and_drop': 'Matching',
       'drag_and_drop_hint': 'Pick the matching letter for each number.',
       'drag_and_drop_pick': 'Pick',
+      'multi_choice_hint': 'You can mark more than one correct answer',
+      'previous_question': 'Back',
+      'unanswered_title': 'Some questions are unanswered',
+      'unanswered_body': '{n} unanswered. Unanswered questions count as wrong.',
+      'finish_anyway': 'Finish anyway',
+      'keep_answering': 'Go back',
       'media_not_attached': 'No file attached',
       'attach_media': 'Attach a file',
       'correction_unsupported_type':

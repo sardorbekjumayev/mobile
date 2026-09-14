@@ -62,11 +62,29 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
     if (leave == true && mounted) context.pop();
   }
 
+  /// Next is always available: a student who does not know an answer moves on
+  /// and comes back, rather than being held on the question. Finishing with
+  /// gaps asks once, so an accidental tap does not hand in a half-done test.
   Future<void> _advance() async {
     final s = S.of(context);
     if (!_controller.isLast) {
       _controller.next();
       return;
+    }
+    final gaps = _controller.unansweredCount;
+    if (gaps > 0) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(s.unansweredTitle),
+          content: Text(s.unansweredBody(gaps)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(s.keepAnswering)),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(s.finishAnyway)),
+          ],
+        ),
+      );
+      if (go != true || !mounted) return;
     }
     await _finish(s);
   }
@@ -177,6 +195,14 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
                           if (question.figure != null) FigureView(figure: question.figure!),
                           if (question.mediaUrl != null) _MediaImage(url: question.mediaUrl!),
                           if (question.isMultipleChoice)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                s.multiChoiceHint,
+                                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                              ),
+                            ),
+                          if (question.isMultipleChoice)
                             for (var i = 0; i < question.options.length; i++)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
@@ -206,12 +232,30 @@ class _TestRunnerScreenState extends State<TestRunnerScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
-                      child: BrandButton(
-                        label: controller.phase == RunnerPhase.submitting
-                            ? s.submitting
-                            : (controller.isLast ? s.finish : s.next),
-                        busy: controller.phase == RunnerPhase.submitting,
-                        onPressed: controller.hasAnswered ? _advance : null,
+                      child: Row(
+                        children: [
+                          if (!controller.isFirst) ...[
+                            Expanded(
+                              child: GhostButton(
+                                label: s.previousQuestion,
+                                onPressed: controller.phase == RunnerPhase.submitting
+                                    ? null
+                                    : controller.previous,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            flex: 2,
+                            child: BrandButton(
+                              label: controller.phase == RunnerPhase.submitting
+                                  ? s.submitting
+                                  : (controller.isLast ? s.finish : s.next),
+                              busy: controller.phase == RunnerPhase.submitting,
+                              onPressed: _advance,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

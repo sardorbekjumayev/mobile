@@ -130,6 +130,7 @@ class TestRunnerController extends ChangeNotifier {
     try {
       final attempt = await _repo.start(testId);
       _attempt = attempt;
+      _restoreGiven(attempt);
       _index = 0;
       _shownAt = DateTime.now();
       _phase = RunnerPhase.running;
@@ -140,6 +141,42 @@ class TestRunnerController extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  /// Answers the server already holds for a resumed attempt. Without this a
+  /// student who closed the app came back to blank questions and had to answer
+  /// everything again, and the unanswered count at finish was wrong.
+  void _restoreGiven(TestAttempt attempt) {
+    _answers.clear();
+    _unsynced.clear();
+    for (final q in attempt.questions) {
+      if (q.isMultipleChoice) {
+        final given = q.givenIndexes;
+        if (given != null && given.isNotEmpty) _answers[q.id] = _Answer(multi: given.toSet());
+      } else if (q.isDragAndDrop) {
+        final given = q.givenDrag;
+        final n = q.dragItems?.items.length ?? 0;
+        if (given != null && given.length == n && n > 0) {
+          _answers[q.id] = _Answer(drag: given.map<int?>((t) => t < 0 ? null : t).toList());
+        }
+      } else if (q.givenIndex != null && q.givenIndex! >= 0) {
+        _answers[q.id] = _Answer(single: q.givenIndex);
+      }
+    }
+  }
+
+  /// Whether a question has a complete answer — used for the unanswered count
+  /// shown before finishing.
+  bool isAnswered(ExamQuestion q) {
+    final a = _answers[q.id];
+    if (a == null) return false;
+    if (q.isMultipleChoice) return a.multi?.isNotEmpty ?? false;
+    if (q.isDragAndDrop) return a.drag != null && a.drag!.isNotEmpty && !a.drag!.contains(null);
+    return a.single != null;
+  }
+
+  int get unansweredCount => questions.where((q) => !isAnswered(q)).length;
+
+  bool get isFirst => _index == 0;
 
   /// Records the choice locally first, then pushes it. The endpoint upserts on
   /// `(student_test_id, question_id)`, so a retry can never double-count.
