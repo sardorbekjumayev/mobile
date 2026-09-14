@@ -78,6 +78,7 @@ void main() {
           },
         ],
       },
+      'POST /notification/read': null,
     });
 
     await pumpApp(tester, api: api, tokens: signedInTokens);
@@ -86,6 +87,14 @@ void main() {
 
     expect(find.text('Yangi test'), findsOneWidget);
     expect(find.text('Hammasini o\'qilgan deb belgilash'), findsOneWidget);
+
+    // Opening the feed counts as reading it: the unread rows shown are marked
+    // read once, without reloading the list.
+    expect(api.calls.where((c) => c == 'POST /notification/read'), hasLength(1));
+    expect(api.bodies['POST /notification/read'], {
+      'ids': ['n1'],
+    });
+    expect(api.calls.where((c) => c == 'GET /notification'), hasLength(1));
   });
 
   testWidgets('the teacher test list shows submission progress', (tester) async {

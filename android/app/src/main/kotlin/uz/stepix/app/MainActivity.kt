@@ -1,4 +1,4 @@
-package com.example.mobile
+package uz.stepix.app
 
 import io.flutter.embedding.android.FlutterActivity
 

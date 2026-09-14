@@ -58,6 +58,11 @@ class ProfileRepository {
         if (ids != null && ids.isNotEmpty) 'ids': ids,
       });
 
+  /// Marks read whatever rows point at [refId] with [type] — how a tapped push,
+  /// which carries no row id, clears its twin in the feed.
+  Future<void> markReadByRef(String type, String refId) =>
+      _api.post('/notification/read', body: {'type': type, 'ref_id': refId});
+
   /// The platform travels with the token so the worker knows which FCM payload
   /// shape to send; without it every push is built for the wrong OS half the
   /// time.

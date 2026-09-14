@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'app/config.dart';
 import 'app/stepix_app.dart';
 import 'core/api/api_client.dart';
+import 'core/push/push_service.dart';
 import 'core/session/session_controller.dart';
 import 'core/session/settings_controller.dart';
 import 'core/storage/token_store.dart';
@@ -43,6 +44,13 @@ Future<void> main() async {
   final auth = AuthRepository(api);
   session = SessionController(auth: auth, tokens: tokens, config: config);
 
+  // Push is optional: without the Firebase config files `init` fails quietly,
+  // and a slow or broken Firebase must never hold up the first frame.
+  final push = PushService(profiles);
+  try {
+    await push.init().timeout(const Duration(seconds: 5));
+  } catch (_) {}
+
   // Asks `/auth/me` who the stored tokens belong to before the first frame that
   // could show a home screen — a cached role is exactly how a suspension fails
   // to take effect.
@@ -60,6 +68,7 @@ Future<void> main() async {
         // The phone screen calls `/auth/lookup` before there is a session, so
         // the repository is a provider rather than a private field of one.
         Provider<AuthRepository>.value(value: auth),
+        Provider<PushService>.value(value: push),
         ChangeNotifierProvider<SessionController>.value(value: session),
         ChangeNotifierProvider(create: (_) => SettingsController(profiles)),
       ],

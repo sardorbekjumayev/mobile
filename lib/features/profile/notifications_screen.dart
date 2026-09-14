@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/push/push_service.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/tokens.dart';
 import '../../data/models/profile_models.dart';
@@ -11,6 +14,7 @@ import '../../data/repositories/profile_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import 'notification_target.dart';
 
 /// M18 — `GET /notification` and `POST /notification/read`.
 ///
@@ -26,6 +30,34 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final _view = GlobalKey<AsyncViewState<NotificationFeed>>();
+  PushService? _push;
+
+  @override
+  void initState() {
+    super.initState();
+    // A push landing while the feed is open should show up in it.
+    _push = context.read<PushService?>()?..received.addListener(_onPush);
+  }
+
+  @override
+  void dispose() {
+    _push?.received.removeListener(_onPush);
+    super.dispose();
+  }
+
+  void _onPush() => _view.currentState?.refresh();
+
+  /// Opening the feed counts as reading it: the unread rows on this page are
+  /// marked read on the server as soon as they are shown. The feed is not
+  /// reloaded afterwards, so the tint stays for this visit and fades next time.
+  Future<NotificationFeed> _load(ProfileRepository repo) async {
+    final feed = await repo.notifications();
+    final unread = [for (final i in feed.items) if (!i.isRead) i.id];
+    if (unread.isNotEmpty) {
+      unawaited(repo.markRead(ids: unread).catchError((Object _) {}));
+    }
+    return feed;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +68,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(title: Text(s.notifications)),
       body: AsyncView<NotificationFeed>(
         key: _view,
-        load: () => repo.notifications(),
+        load: () => _load(repo),
         builder: (context, feed, refresh) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
@@ -84,7 +116,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _open(BuildContext context, AppNotification item) async {
     final session = context.read<SessionController>();
     final repo = context.read<ProfileRepository>();
-    final target = _targetOf(item, teacher: session.isTeacher);
+    final target = notificationTarget(item.type, item.refId, teacher: session.isTeacher);
 
     if (!item.isRead) {
       try {
@@ -95,17 +127,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
     }
     if (target != null && context.mounted) context.push(target);
-  }
-
-  static String? _targetOf(AppNotification item, {required bool teacher}) {
-    final ref = item.refId;
-    if (ref == null) return null;
-    return switch (item.type) {
-      'test_assigned' || 'test_due_soon' when !teacher => '/student/test/$ref',
-      'test_graded' || 'test_failed' when !teacher => '/student/test/$ref/result',
-      'test_assigned' || 'test_graded' when teacher => '/teacher/test/$ref',
-      _ => null,
-    };
   }
 }
 

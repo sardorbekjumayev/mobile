@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/push/push_service.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/strings.dart';
@@ -51,7 +52,7 @@ class LockedScreen extends StatelessWidget {
               GhostButton(
                 label: s.backToLogin,
                 onPressed: () async {
-                  await session.signOut();
+                  await session.signOut(fcmToken: context.read<PushService?>()?.token);
                   if (context.mounted) context.go('/welcome');
                 },
               ),

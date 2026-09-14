@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/push/push_service.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/session/settings_controller.dart';
 import '../../core/theme/tokens.dart';
@@ -87,6 +88,7 @@ Future<void> confirmSignOut(BuildContext context) async {
 
   if (confirmed != true || !context.mounted) return;
   final settings = context.read<SettingsController>();
-  await context.read<SessionController>().signOut();
+  final fcmToken = context.read<PushService?>()?.token;
+  await context.read<SessionController>().signOut(fcmToken: fcmToken);
   settings.clear();
 }

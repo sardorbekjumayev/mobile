@@ -23,6 +23,8 @@ dependencies:
   share_plus: ^10.1.2
   image_picker: ^1.1.2
   flutter_svg: ^2.0.10
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:

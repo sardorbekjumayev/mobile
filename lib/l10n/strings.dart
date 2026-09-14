@@ -318,6 +318,7 @@ class S {
   String get logoutConfirm => _t('logout_confirm');
   String get cancel => _t('cancel');
   String get noNotifications => _t('no_notifications');
+  String get openAction => _t('open_action');
   String get markAllRead => _t('mark_all_read');
   String get version => _t('version');
   String get updateRequired => _t('update_required');
@@ -584,6 +585,7 @@ class S {
       'logout_confirm': 'Hisobdan chiqasizmi?',
       'cancel': 'Bekor qilish',
       'no_notifications': 'Bildirishnomalar yo\'q',
+      'open_action': 'Ochish',
       'mark_all_read': 'Hammasini o\'qilgan deb belgilash',
       'version': 'Versiya',
       'update_required': 'Ilovani yangilang',
@@ -899,6 +901,7 @@ class S {
       'logout_confirm': 'Выйти из аккаунта?',
       'cancel': 'Отмена',
       'no_notifications': 'Уведомлений нет',
+      'open_action': 'Открыть',
       'mark_all_read': 'Отметить всё прочитанным',
       'version': 'Версия',
       'update_required': 'Обновите приложение',
@@ -1214,6 +1217,7 @@ class S {
       'logout_confirm': 'Sign out of your account?',
       'cancel': 'Cancel',
       'no_notifications': 'No notifications',
+      'open_action': 'Open',
       'mark_all_read': 'Mark all as read',
       'version': 'Version',
       'update_required': 'Update the app',

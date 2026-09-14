@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../core/push/push_service.dart';
 import '../core/session/session_controller.dart';
 import '../core/session/settings_controller.dart';
 import '../core/theme/ambient_background.dart';
@@ -27,6 +28,10 @@ class _StepixAppState extends State<StepixApp> {
   late final SessionController _session;
   late final SettingsController _settings;
   late final GoRouter _router;
+  PushService? _push;
+
+  /// Lets a foreground push show a SnackBar over whatever screen is up.
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -42,10 +47,14 @@ class _StepixAppState extends State<StepixApp> {
     // was the request that would fail.
     _settings.ensureLoaded();
     _session.addListener(_onSession);
+    // Nullable: tests build the tree without push.
+    _push = context.read<PushService?>()
+      ?..attach(session: _session, router: _router, messenger: _messenger);
   }
 
   @override
   void dispose() {
+    _push?.detach();
     _session.removeListener(_onSession);
     _router.dispose();
     super.dispose();
@@ -72,6 +81,7 @@ class _StepixAppState extends State<StepixApp> {
       title: 'Stepix',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
+      scaffoldMessengerKey: _messenger,
       theme: AppTheme.of(primary: center?.brandPrimary, primaryDark: center?.brandDark),
       locale: Locale(language),
       supportedLocales: S.supported.map(Locale.new),
