@@ -27,7 +27,12 @@ abstract class ApiClient {
 
   /// Multipart upload of several files under one repeated [field] — the
   /// solution sheet, whose pages have to arrive as a single request.
-  Future<dynamic> uploadFiles(String path, {required String field, required List<String> filePaths});
+  Future<dynamic> uploadFiles(
+    String path, {
+    required String field,
+    required List<String> filePaths,
+    Map<String, String> fields = const {},
+  });
 
   /// Raw bytes rather than the JSON envelope — for `POST .../pdf`, the one
   /// response on the API that is not JSON.
@@ -111,8 +116,11 @@ class DioApiClient implements ApiClient {
     String path, {
     required String field,
     required List<String> filePaths,
+    Map<String, String> fields = const {},
   }) async {
     final form = FormData();
+    // Text fields beside the files — a title and a kind travel with the photos.
+    form.fields.addAll(fields.entries);
     for (final filePath in filePaths) {
       form.files.add(MapEntry(field, await MultipartFile.fromFile(filePath)));
     }

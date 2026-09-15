@@ -67,6 +67,8 @@ class TeacherHomeScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _TestsBanner(count: home.kpis.testsThisMonth),
             const SizedBox(height: 12),
+            const _KnowledgeCard(),
+            const SizedBox(height: 12),
             _AttentionCard(items: home.attention),
             if (bundle.groups.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -117,6 +119,50 @@ class _Kpi extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 10.5, height: 1.3, color: AppColors.faint),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The way into the AI memory: upload a test or worked papers.
+class _KnowledgeCard extends StatelessWidget {
+  const _KnowledgeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      radius: AppShapes.tileRadius,
+      onTap: () => context.push('/teacher/knowledge'),
+      child: Row(
+        children: [
+          const BlobAvatar(
+            text: '',
+            icon: Icons.psychology_outlined,
+            size: 40,
+            background: AppColors.violetTint,
+            foreground: AppColors.violet,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.knowledgeHomeTitle,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  s.knowledgeHomeBody,
+                  style: const TextStyle(fontSize: 12, height: 1.35, color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.faint),
         ],
       ),
     );

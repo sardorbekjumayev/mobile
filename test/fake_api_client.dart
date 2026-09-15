@@ -45,8 +45,9 @@ class FakeApiClient implements ApiClient {
     String path, {
     required String field,
     required List<String> filePaths,
+    Map<String, String> fields = const {},
   }) =>
-      _answer('POST $path', filePaths);
+      _answer('POST $path', fields.isEmpty ? filePaths : {'files': filePaths, ...fields});
 
   @override
   Future<List<int>> downloadBytes(String path, {Object? body}) async {

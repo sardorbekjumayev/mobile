@@ -1,11 +1,41 @@
 import '../../core/api/api_client.dart';
 import '../../core/util/json.dart';
+import '../models/knowledge_models.dart';
 import '../models/teacher_models.dart';
 
 class TeacherRepository {
   const TeacherRepository(this._api);
 
   final ApiClient _api;
+
+  // ── AI memory ──────────────────────────────────────────────────────
+
+  /// This teacher's own uploads, newest first.
+  Future<List<KnowledgeSource>> knowledgeSources() async => mapList(
+        asMap(await _api.post('/teacher/knowledge/source/paging', body: {'page': 1, 'limit': 50}))['data'],
+        KnowledgeSource.fromJson,
+      );
+
+  Future<KnowledgeSourceDetail> knowledgeSource(String id) async =>
+      KnowledgeSourceDetail.fromJson(asMap(await _api.get('/teacher/knowledge/source/$id')));
+
+  /// Photographs of a test or of worked papers. The server reads them on a
+  /// queue; the returned source starts `queued`.
+  Future<KnowledgeSourceDetail> uploadKnowledge({
+    required String title,
+    required String kind,
+    required List<String> paths,
+  }) async =>
+      KnowledgeSourceDetail.fromJson(asMap(await _api.uploadFiles(
+        '/teacher/knowledge/source',
+        field: 'files',
+        filePaths: paths,
+        fields: {'title': title, 'kind': kind},
+      )));
+
+  Future<void> retryKnowledge(String id) => _api.post('/teacher/knowledge/source/$id/retry');
+
+  Future<void> deleteKnowledge(String id) => _api.delete('/teacher/knowledge/source/$id');
 
   Future<TeacherHome> home() async =>
       TeacherHome.fromJson(asMap(await _api.get('/teacher/home')));

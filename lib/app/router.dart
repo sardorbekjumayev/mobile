@@ -33,6 +33,7 @@ import '../features/teacher/teacher_home_screen.dart';
 import '../features/teacher/teacher_student_review_screen.dart';
 import '../features/teacher/teacher_test_detail_screen.dart';
 import '../features/teacher/teacher_test_paper_screen.dart';
+import '../features/teacher/teacher_knowledge_screen.dart';
 import '../features/teacher/teacher_test_scan_screen.dart';
 import '../features/teacher/teacher_tests_screen.dart';
 
@@ -197,6 +198,20 @@ GoRouter createRouter({
       GoRoute(
         path: '/teacher/create-test',
         builder: (context, state) => const CreateTestScreen(),
+      ),
+      // The AI memory. The upload screen has its own path for the same reason
+      // `/teacher/create-test` does: `/teacher/knowledge/upload` would match `:id`.
+      GoRoute(
+        path: '/teacher/knowledge',
+        builder: (context, state) => const TeacherKnowledgeScreen(),
+      ),
+      GoRoute(
+        path: '/teacher/knowledge-upload',
+        builder: (context, state) => const KnowledgeUploadScreen(),
+      ),
+      GoRoute(
+        path: '/teacher/knowledge/:id',
+        builder: (context, state) => KnowledgeSourceScreen(sourceId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/teacher/test/:id',

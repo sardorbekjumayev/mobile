@@ -147,6 +147,46 @@ class S {
   String get lockedTitle => _t('locked_title');
   String get backToLogin => _t('back_to_login');
 
+  // AI memory (AI xotira)
+  String get knowledgeTitle => _t('knowledge_title');
+  String get knowledgeBody => _t('knowledge_body');
+  String get knowledgeUploadBody => _t('knowledge_upload_body');
+  String get knowledgePrivacy => _t('knowledge_privacy');
+  String get knowledgeHomeTitle => _t('knowledge_home_title');
+  String get knowledgeHomeBody => _t('knowledge_home_body');
+  String get knowledgeNew => _t('knowledge_new');
+  String get knowledgeUpload => _t('knowledge_upload');
+  String get knowledgeName => _t('knowledge_name');
+  String get knowledgeNameHint => _t('knowledge_name_hint');
+  String get knowledgeKindTest => _t('knowledge_kind_test');
+  String get knowledgeKindWorked => _t('knowledge_kind_worked');
+  String get knowledgeKindMaterial => _t('knowledge_kind_material');
+  String get knowledgePages => _t('knowledge_pages');
+  String get knowledgePagesWord => _t('knowledge_pages_word');
+  String get knowledgeQuestionsWord => _t('knowledge_questions_word');
+  String get knowledgeLessonsWord => _t('knowledge_lessons_word');
+  String get knowledgeNeedPhoto => _t('knowledge_need_photo');
+  String get knowledgeNeedName => _t('knowledge_need_name');
+  String get knowledgeUploaded => _t('knowledge_uploaded');
+  String get knowledgeEmpty => _t('knowledge_empty');
+  String get knowledgeStateQueued => _t('knowledge_state_queued');
+  String get knowledgeStateAnalyzing => _t('knowledge_state_analyzing');
+  String get knowledgeStateDone => _t('knowledge_state_done');
+  String get knowledgeStateFailed => _t('knowledge_state_failed');
+  String get knowledgeKindExemplar => _t('knowledge_kind_exemplar');
+  String get knowledgeKindMisconception => _t('knowledge_kind_misconception');
+  String get knowledgeKindPitfall => _t('knowledge_kind_pitfall');
+  String get knowledgeKindInsight => _t('knowledge_kind_insight');
+  String get knowledgeShared => _t('knowledge_shared');
+  String get knowledgePrivate => _t('knowledge_private');
+  String get knowledgeDepth => _t('knowledge_depth');
+  String get knowledgeDelete => _t('knowledge_delete');
+  String get knowledgeDeleteConfirm => _t('knowledge_delete_confirm');
+  String get knowledgeCancel => _t('knowledge_cancel');
+  String get knowledgeRetry => _t('knowledge_retry');
+  String get knowledgeRefresh => _t('knowledge_refresh');
+  String get knowledgeAnalyzingNote => _t('knowledge_analyzing_note');
+
   // Solution sheet (yechim varag'i)
   String get solutionUploadTitle => _t('solution_upload_title');
   String get solutionUploadBody => _t('solution_upload_body');
@@ -611,6 +651,44 @@ class S {
       'wd_4': 'Pa',
       'wd_5': 'Ju',
       'wd_6': 'Sh',
+      'knowledge_title': 'AI xotira',
+      'knowledge_body': 'O\'zingiz tuzgan testlarni yoki o\'quvchilar ishlagan varaqlarni rasmga olib yuklang. AI savollar va xatolardan o\'rganadi — keyingi testlar chuqurroq bo\'ladi.',
+      'knowledge_upload_body': 'Har bir sahifani yorug\' joyda, tekis holatda suratga oling. AI savollarni, to\'g\'ri javoblarni va o\'quvchi xatolarini o\'qib oladi.',
+      'knowledge_privacy': 'Savollaringiz faqat markazingiz testlariga namuna bo\'ladi. Boshqa markazlarga savol matni emas, faqat umumiy xulosalar (tipik xatolar) ulashiladi.',
+      'knowledge_home_title': 'AI xotiraga yuklang',
+      'knowledge_home_body': 'Testlaringiz va ishlangan varaqlardan AI o\'rganadi',
+      'knowledge_new': 'Yangi yuklash',
+      'knowledge_upload': 'Yuklash va tahlil qilish',
+      'knowledge_name': 'Nomi',
+      'knowledge_name_hint': 'Masalan: 9-sinf algebra nazorat ishi',
+      'knowledge_kind_test': 'Test',
+      'knowledge_kind_worked': 'Ishlangan varaq',
+      'knowledge_kind_material': 'Material',
+      'knowledge_pages': 'Sahifalar',
+      'knowledge_pages_word': 'sahifa',
+      'knowledge_questions_word': 'savol',
+      'knowledge_lessons_word': 'xulosa',
+      'knowledge_need_photo': 'Kamida bitta rasm qo\'shing',
+      'knowledge_need_name': 'Nomini yozing',
+      'knowledge_uploaded': 'Yuklandi — AI tahlil qilyapti',
+      'knowledge_empty': 'Hali hech narsa yuklanmagan. Birinchi testingizni suratga olib yuklang.',
+      'knowledge_state_queued': 'Navbatda',
+      'knowledge_state_analyzing': 'Tahlil qilinmoqda',
+      'knowledge_state_done': 'Tayyor',
+      'knowledge_state_failed': 'Xato',
+      'knowledge_kind_exemplar': 'Namuna savol',
+      'knowledge_kind_misconception': 'Tipik xato',
+      'knowledge_kind_pitfall': 'Sayozlik',
+      'knowledge_kind_insight': 'Xulosa',
+      'knowledge_shared': 'Hammaga ulashiladi',
+      'knowledge_private': 'Faqat markazingiz',
+      'knowledge_depth': 'chuqurlik',
+      'knowledge_delete': 'O\'chirish',
+      'knowledge_delete_confirm': 'Yuklama va undan olingan xulosalar xotiradan o\'chiriladi. Davom etasizmi?',
+      'knowledge_cancel': 'Bekor qilish',
+      'knowledge_retry': 'Qayta tahlil qilish',
+      'knowledge_refresh': 'Yangilash',
+      'knowledge_analyzing_note': 'Bir-besh daqiqa ketadi. Sahifani yopib qo\'yishingiz mumkin.',
       'solution_upload_title': 'Ishlangan varag\'ingizni yuklang',
       'solution_upload_body':
           'O\'qituvchingiz yechimlar yozilgan varaqni so\'ragan. Har bir sahifani aniq rasmga oling — sun\'iy intellekt ishlash usulingizni tahlil qiladi. Rasmlar tahlildan so\'ng o\'chiriladi.',
@@ -927,6 +1005,44 @@ class S {
       'wd_4': 'Чт',
       'wd_5': 'Пт',
       'wd_6': 'Сб',
+      'knowledge_title': 'ИИ-память',
+      'knowledge_body': 'Загрузите фото своих тестов или листов, решённых учениками. ИИ учится на вопросах и ошибках — следующие тесты станут глубже.',
+      'knowledge_upload_body': 'Снимайте каждую страницу ровно и при хорошем свете. ИИ прочитает вопросы, ответы и ошибки учеников.',
+      'knowledge_privacy': 'Ваши вопросы служат образцом только для тестов вашего центра. Другим центрам передаются лишь общие выводы (типичные ошибки), не текст вопросов.',
+      'knowledge_home_title': 'Загрузить в ИИ-память',
+      'knowledge_home_body': 'ИИ учится на ваших тестах и решённых листах',
+      'knowledge_new': 'Новая загрузка',
+      'knowledge_upload': 'Загрузить и разобрать',
+      'knowledge_name': 'Название',
+      'knowledge_name_hint': 'Например: контрольная по алгебре, 9 класс',
+      'knowledge_kind_test': 'Тест',
+      'knowledge_kind_worked': 'Решённые листы',
+      'knowledge_kind_material': 'Материал',
+      'knowledge_pages': 'Страницы',
+      'knowledge_pages_word': 'стр.',
+      'knowledge_questions_word': 'вопр.',
+      'knowledge_lessons_word': 'выводов',
+      'knowledge_need_photo': 'Добавьте хотя бы одно фото',
+      'knowledge_need_name': 'Укажите название',
+      'knowledge_uploaded': 'Загружено — ИИ разбирает',
+      'knowledge_empty': 'Пока ничего не загружено. Сфотографируйте свой первый тест.',
+      'knowledge_state_queued': 'В очереди',
+      'knowledge_state_analyzing': 'Разбирается',
+      'knowledge_state_done': 'Готово',
+      'knowledge_state_failed': 'Ошибка',
+      'knowledge_kind_exemplar': 'Образец вопроса',
+      'knowledge_kind_misconception': 'Типичная ошибка',
+      'knowledge_kind_pitfall': 'Поверхностность',
+      'knowledge_kind_insight': 'Вывод',
+      'knowledge_shared': 'Доступно всем центрам',
+      'knowledge_private': 'Только ваш центр',
+      'knowledge_depth': 'глубина',
+      'knowledge_delete': 'Удалить',
+      'knowledge_delete_confirm': 'Загрузка и полученные из неё выводы будут удалены. Продолжить?',
+      'knowledge_cancel': 'Отмена',
+      'knowledge_retry': 'Разобрать заново',
+      'knowledge_refresh': 'Обновить',
+      'knowledge_analyzing_note': 'Займёт одну-пять минут. Экран можно закрыть.',
       'solution_upload_title': 'Загрузите лист с решениями',
       'solution_upload_body':
           'Учитель попросил лист с вашими решениями. Сфотографируйте каждую страницу чётко — ИИ разберёт ваш способ решения. Фото удаляются после анализа.',
@@ -1243,6 +1359,44 @@ class S {
       'wd_4': 'Thu',
       'wd_5': 'Fri',
       'wd_6': 'Sat',
+      'knowledge_title': 'AI memory',
+      'knowledge_body': 'Upload photos of tests you wrote or papers your students worked on. The AI learns from the questions and mistakes, so the next tests go deeper.',
+      'knowledge_upload_body': 'Photograph each page flat and in good light. The AI reads the questions, the answers and the students\' mistakes.',
+      'knowledge_privacy': 'Your questions guide only your center\'s tests. Other centers get general lessons (typical mistakes), never the question text.',
+      'knowledge_home_title': 'Teach the AI',
+      'knowledge_home_body': 'The AI learns from your tests and worked papers',
+      'knowledge_new': 'New upload',
+      'knowledge_upload': 'Upload and analyse',
+      'knowledge_name': 'Name',
+      'knowledge_name_hint': 'e.g. Grade 9 algebra quiz',
+      'knowledge_kind_test': 'Test',
+      'knowledge_kind_worked': 'Worked papers',
+      'knowledge_kind_material': 'Material',
+      'knowledge_pages': 'Pages',
+      'knowledge_pages_word': 'pages',
+      'knowledge_questions_word': 'questions',
+      'knowledge_lessons_word': 'lessons',
+      'knowledge_need_photo': 'Add at least one photo',
+      'knowledge_need_name': 'Enter a name',
+      'knowledge_uploaded': 'Uploaded — the AI is analysing it',
+      'knowledge_empty': 'Nothing uploaded yet. Photograph your first test.',
+      'knowledge_state_queued': 'Queued',
+      'knowledge_state_analyzing': 'Analysing',
+      'knowledge_state_done': 'Done',
+      'knowledge_state_failed': 'Failed',
+      'knowledge_kind_exemplar': 'Example question',
+      'knowledge_kind_misconception': 'Typical mistake',
+      'knowledge_kind_pitfall': 'Shallow pattern',
+      'knowledge_kind_insight': 'Insight',
+      'knowledge_shared': 'Shared with all centers',
+      'knowledge_private': 'Your center only',
+      'knowledge_depth': 'depth',
+      'knowledge_delete': 'Delete',
+      'knowledge_delete_confirm': 'The upload and what it taught will be removed. Continue?',
+      'knowledge_cancel': 'Cancel',
+      'knowledge_retry': 'Analyse again',
+      'knowledge_refresh': 'Refresh',
+      'knowledge_analyzing_note': 'Takes one to five minutes. You can leave this screen.',
       'solution_upload_title': 'Upload your worked solutions',
       'solution_upload_body':
           'Your teacher asked for the sheet you solved on. Photograph each page clearly — AI will review how you worked. Photos are deleted after the analysis.',
