@@ -30,8 +30,50 @@ class _TeacherTestScanScreenState extends State<TeacherTestScanScreen> {
   final _refreshKey = GlobalKey<AsyncViewState<List<PaperScan>>>();
   bool _uploading = false;
 
+  /// Camera for a sheet on the desk, gallery for a stack already photographed.
   Future<void> _pickAndUpload() async {
-    final photos = await _picker.pickMultiImage(imageQuality: 90);
+    final s = S.of(context);
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.violet),
+              title: Text(s.solutionCamera),
+              onTap: () => Navigator.of(context).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: AppColors.violet),
+              title: Text(s.solutionGallery),
+              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    final List<XFile> photos;
+    try {
+      if (source == ImageSource.camera) {
+        final one = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90, maxWidth: 2400);
+        photos = one == null ? const [] : [one];
+      } else {
+        photos = await _picker.pickMultiImage(imageQuality: 90);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.somethingWentWrong)));
+      return;
+    }
     if (photos.isEmpty || !mounted) return;
 
     setState(() => _uploading = true);
@@ -100,18 +142,47 @@ class _TeacherTestScanScreenState extends State<TeacherTestScanScreen> {
         key: _refreshKey,
         load: () => repo.scans(widget.testId),
         builder: (context, scans, refresh) {
-          if (scans.isEmpty) {
-            return EmptyView(message: s.scanEmpty, icon: Icons.document_scanner_outlined);
-          }
-          return ListView.builder(
+          return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-            itemCount: scans.length,
-            itemBuilder: (context, i) => _ScanRow(
-              scan: scans[i],
-              onAssign: () => _assign(scans[i]),
-              onReview: (studentTestId) =>
-                  context.push('/teacher/test/${widget.testId}/student/$studentTestId/review'),
-            ),
+            children: [
+              AppCard(
+                color: AppColors.violetTint,
+                radius: AppShapes.tileRadius,
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.document_scanner_outlined, size: 18, color: AppColors.violet),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        s.scanHint,
+                        style: const TextStyle(fontSize: 12.5, height: 1.45, color: AppColors.body),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              BrandButton(
+                label: s.scanUpload,
+                icon: Icons.add_a_photo_outlined,
+                busy: _uploading,
+                accent: AppColors.violet,
+                onPressed: _uploading ? null : _pickAndUpload,
+              ),
+              const SizedBox(height: 14),
+              if (scans.isEmpty)
+                EmptyView(message: s.scanEmpty, icon: Icons.document_scanner_outlined)
+              else
+                for (final scan in scans)
+                  _ScanRow(
+                    scan: scan,
+                    onAssign: () => _assign(scan),
+                    onReview: (studentTestId) =>
+                        context.push('/teacher/test/${widget.testId}/student/$studentTestId/review'),
+                  ),
+            ],
           );
         },
       ),

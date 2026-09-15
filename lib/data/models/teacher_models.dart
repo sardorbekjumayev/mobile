@@ -121,11 +121,13 @@ class TeacherGroup {
     this.avgScore,
     this.attendancePct,
     this.room,
+    this.subjectId = '',
   });
 
   factory TeacherGroup.fromJson(Map<String, dynamic> j) => TeacherGroup(
         id: asString(j['id']),
         name: asString(j['name']),
+        subjectId: asString(j['subject_id']),
         subject: asString(j['subject']),
         level: asString(j['level']),
         studentsCount: asInt(j['students_count']),
@@ -141,6 +143,9 @@ class TeacherGroup {
 
   final String id;
   final String name;
+
+  /// Empty from a server that predates multi-subject teachers.
+  final String subjectId;
   final String subject;
   final String level;
   final int studentsCount;
@@ -458,17 +463,40 @@ class AttendanceMark {
 
 // ── test creation ────────────────────────────────────────────────────────
 
-/// `GET /teacher/program` — the teacher's own subject, its branches and their
-/// topics, in one call.
+/// One subject a teacher teaches — a teacher can teach several.
+class SubjectRef {
+  const SubjectRef({required this.id, required this.name});
+
+  factory SubjectRef.fromJson(Map<String, dynamic> j) =>
+      SubjectRef(id: asString(j['id']), name: asString(j['name']));
+
+  final String id;
+  final String name;
+}
+
+/// `GET /teacher/program` — one of the teacher's subjects, its branches and
+/// their topics, in one call, plus every subject they teach for the picker.
 class TeacherProgram {
-  const TeacherProgram({required this.subjectName, required this.branches});
+  const TeacherProgram({
+    required this.subjectName,
+    required this.branches,
+    this.subjectId = '',
+    this.subjects = const [],
+  });
 
   factory TeacherProgram.fromJson(Map<String, dynamic> j) => TeacherProgram(
+        subjectId: asString(asMap(j['subject'])['id']),
         subjectName: asString(asMap(j['subject'])['name']),
+        subjects: mapList(j['subjects'], SubjectRef.fromJson),
         branches: mapList(j['branches'], ProgramBranch.fromJson),
       );
 
+  final String subjectId;
   final String subjectName;
+
+  /// Every subject this teacher teaches. More than one draws the subject
+  /// picker above the form.
+  final List<SubjectRef> subjects;
   final List<ProgramBranch> branches;
 
   bool get isEmpty => branches.every((b) => b.topics.isEmpty);
@@ -502,6 +530,7 @@ class ProgramTopic {
     required this.name,
     required this.isCustom,
     this.hint,
+    this.fromMaterial = false,
   });
 
   factory ProgramTopic.fromJson(Map<String, dynamic> j) => ProgramTopic(
@@ -510,6 +539,7 @@ class ProgramTopic {
         name: asString(j['name']),
         hint: asStringOrNull(j['hint']),
         isCustom: asBool(j['is_custom']),
+        fromMaterial: asBool(j['from_material']),
       );
 
   final String id;
@@ -519,6 +549,47 @@ class ProgramTopic {
 
   /// Written by this center rather than seeded by the platform.
   final bool isCustom;
+
+  /// Drawn from the teacher's own uploaded material — its questions come from
+  /// that text.
+  final bool fromMaterial;
+}
+
+/// One upload of the teacher's own material — `POST /teacher/material/upload`,
+/// polled on `GET /teacher/material/:id` until it is read.
+class TeacherMaterial {
+  const TeacherMaterial({
+    required this.id,
+    required this.kind,
+    required this.state,
+    this.error,
+    this.chars = 0,
+  });
+
+  factory TeacherMaterial.fromJson(Map<String, dynamic> j) => TeacherMaterial(
+        id: asString(j['id']),
+        kind: asString(j['kind']),
+        state: asString(j['state'], 'reading'),
+        error: asStringOrNull(j['error']),
+        chars: asInt(j['chars']),
+      );
+
+  final String id;
+
+  /// `pdf` · `docx` · `image`.
+  final String kind;
+
+  /// `reading` · `ready` · `failed`.
+  final String state;
+
+  /// An error code: `21404` is a PDF with no text layer, `21405` a photo the
+  /// model could not read.
+  final String? error;
+  final int chars;
+
+  bool get isReading => state == 'reading';
+  bool get isReady => state == 'ready';
+  bool get isFailed => state == 'failed';
 }
 
 /// `GET /teacher/quota` — this month's generation allowance.

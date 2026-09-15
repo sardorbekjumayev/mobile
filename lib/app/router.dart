@@ -244,6 +244,16 @@ GoRouter createRouter({
               studentTestId: state.pathParameters['studentTestId']!,
             ),
           ),
+          // The same upload screen a student uses, sending the sheet for them.
+          GoRoute(
+            path: 'student/:studentTestId/solution',
+            builder: (context, state) => SolutionUploadScreen(
+              testId: state.pathParameters['id']!,
+              studentTestId: state.pathParameters['studentTestId']!,
+              studentName: state.uri.queryParameters['name'],
+              maxPages: int.tryParse(state.uri.queryParameters['pages'] ?? '') ?? 10,
+            ),
+          ),
         ],
       ),
     ],

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
 import '../../data/repositories/student_repository.dart';
+import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/primitives.dart';
 
@@ -45,9 +46,18 @@ class SolutionUploadScreen extends StatefulWidget {
     required this.maxPages,
     this.retry = false,
     this.submitAfter = false,
+    this.studentTestId,
+    this.studentName,
   });
 
   final String testId;
+
+  /// Set when a teacher is uploading one student's sheet for them — the
+  /// upload goes to that attempt instead of the signed-in student's.
+  final String? studentTestId;
+  final String? studentName;
+
+  bool get byTeacher => studentTestId != null;
 
   /// `solution_pages` — the server refuses more (`20814`).
   final int maxPages;
@@ -139,9 +149,14 @@ class _SolutionUploadScreenState extends State<SolutionUploadScreen> {
     });
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await context
-          .read<StudentRepository>()
-          .uploadSolution(widget.testId, _photos.map((p) => p.path).toList());
+      final paths = _photos.map((p) => p.path).toList();
+      if (widget.byTeacher) {
+        await context
+            .read<TeacherRepository>()
+            .uploadStudentSolution(widget.testId, widget.studentTestId!, paths);
+      } else {
+        await context.read<StudentRepository>().uploadSolution(widget.testId, paths);
+      }
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(s.solutionUploaded)));
       Navigator.of(context).pop(true);
@@ -176,10 +191,17 @@ class _SolutionUploadScreenState extends State<SolutionUploadScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                   children: [
-                    Text(s.solutionUploadTitle, style: Theme.of(context).textTheme.headlineMedium),
+                    Text(
+                      widget.byTeacher
+                          ? (widget.studentName?.isNotEmpty ?? false)
+                              ? widget.studentName!
+                              : s.teacherSolutionUpload
+                          : s.solutionUploadTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                     const SizedBox(height: 8),
                     Text(
-                      s.solutionUploadBody,
+                      widget.byTeacher ? s.teacherSolutionBody : s.solutionUploadBody,
                       style: const TextStyle(fontSize: 13, height: 1.5, color: AppColors.muted),
                     ),
                     if (widget.retry) ...[

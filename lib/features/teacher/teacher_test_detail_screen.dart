@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/api/api_exception.dart';
 import '../../core/theme/tokens.dart';
 import '../../data/models/student_models.dart' show TestState;
 import '../../data/models/teacher_models.dart';
@@ -48,6 +53,8 @@ class TeacherTestDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _PublishCard(test: detail.test, onDone: refresh),
             const SizedBox(height: 12),
+            _PaperCard(testId: testId),
+            const SizedBox(height: 12),
             if (detail.students.isEmpty)
               EmptyView(message: s.noTeacherTests, icon: Icons.groups_2_outlined)
             else
@@ -68,6 +75,8 @@ class TeacherTestDetailScreen extends StatelessWidget {
                         testId: testId,
                         student: student,
                         showSolution: detail.test.solutionRequired,
+                        solutionPages: detail.test.solutionRequired ? detail.test.solutionPages : 10,
+                        onChanged: refresh,
                       ),
                   ],
                 ),
@@ -144,18 +153,106 @@ class _PublishCardState extends State<_PublishCard> {
   }
 }
 
+/// The paper version of the test: one PDF with every student's questions and,
+/// on its last page, their titul — the answer grid the scanner reads back.
+class _PaperCard extends StatefulWidget {
+  const _PaperCard({required this.testId});
+
+  final String testId;
+
+  @override
+  State<_PaperCard> createState() => _PaperCardState();
+}
+
+class _PaperCardState extends State<_PaperCard> {
+  bool _downloading = false;
+
+  Future<void> _download() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _downloading = true);
+    try {
+      final bytes = await context.read<TeacherRepository>().testPdf(widget.testId);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${widget.testId}.pdf');
+      await file.writeAsBytes(bytes);
+      if (!mounted) return;
+      await Share.shareXFiles([XFile(file.path)]);
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BlobAvatar(
+                text: '',
+                icon: Icons.print_outlined,
+                size: 38,
+                background: AppColors.violetTint,
+                foreground: AppColors.violet,
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(s.titulTitle, style: Theme.of(context).textTheme.titleMedium)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(s.titulBody, style: const TextStyle(fontSize: 12.5, height: 1.45, color: AppColors.muted)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              GhostButton(
+                label: _downloading ? s.pdfPreparing : s.titulDownload,
+                onPressed: _downloading ? null : _download,
+              ),
+              GhostButton(
+                label: s.viewVariants,
+                onPressed: () => context.push('/teacher/test/${widget.testId}/paper'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ParticipantRow extends StatelessWidget {
   const _ParticipantRow({
     required this.testId,
     required this.student,
+    required this.onChanged,
     this.showSolution = false,
+    this.solutionPages = 10,
   });
 
   final String testId;
   final TestParticipant student;
+  final Future<void> Function() onChanged;
 
   /// The test requires a worked solution sheet — badge its state per student.
   final bool showSolution;
+
+  /// How many pages the teacher may photograph for this student.
+  final int solutionPages;
+
+  Future<void> _uploadSolution(BuildContext context) async {
+    final done = await context.push<bool>(Uri(
+      path: '/teacher/test/$testId/student/${student.studentTestId}/solution',
+      queryParameters: {'name': student.fullName, 'pages': '$solutionPages'},
+    ).toString());
+    if (done == true) await onChanged();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +313,11 @@ class _ParticipantRow extends StatelessWidget {
               )
             else
               StatusChip(label: label, background: background, foreground: foreground),
+            IconButton(
+              icon: const Icon(Icons.add_a_photo_outlined, size: 19, color: AppColors.violet),
+              tooltip: s.teacherSolutionUpload,
+              onPressed: () => _uploadSolution(context),
+            ),
             if (student.state == TestState.submitted) ...[
               const SizedBox(width: 4),
               IconButton(

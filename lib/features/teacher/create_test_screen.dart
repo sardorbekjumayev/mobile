@@ -17,6 +17,7 @@ import '../../data/repositories/teacher_repository.dart';
 import '../../l10n/strings.dart';
 import '../shared/widgets/async_view.dart';
 import '../shared/widgets/primitives.dart';
+import 'teacher_material_screen.dart';
 
 /// M20 — a teacher building a test from their phone.
 ///
@@ -72,6 +73,11 @@ class _Form extends StatefulWidget {
 }
 
 class _FormState extends State<_Form> {
+  /// The subject on screen — a teacher of several switches it with the pills
+  /// above the topic, and the program reloads for it.
+  late TeacherProgram _program = widget.setup.program;
+  bool _loadingProgram = false;
+
   ProgramTopic? _topic;
   ProgramBranch? _branch;
   final Set<String> _groupIds = {};
@@ -93,9 +99,67 @@ class _FormState extends State<_Form> {
   @override
   void initState() {
     super.initState();
-    // One group is the common case, and pre-selecting it removes a tap from
-    // every single use of this screen.
-    if (widget.setup.groups.length == 1) _groupIds.add(widget.setup.groups.first.id);
+    _preselectGroup();
+  }
+
+  /// The groups that take this subject — a Physics test cannot go to a Maths
+  /// group. A server that sends no subject ids leaves every group listed.
+  List<TeacherGroup> get _groups => [
+        for (final g in widget.setup.groups)
+          if (g.subjectId.isEmpty || _program.subjectId.isEmpty || g.subjectId == _program.subjectId) g,
+      ];
+
+  /// One group is the common case, and pre-selecting it removes a tap from
+  /// every single use of this screen.
+  void _preselectGroup() {
+    final groups = _groups;
+    if (groups.length == 1) _groupIds.add(groups.first.id);
+  }
+
+  Future<void> _selectSubject(String subjectId) async {
+    if (subjectId == _program.subjectId || _loadingProgram) return;
+    setState(() {
+      _loadingProgram = true;
+      _error = null;
+    });
+    try {
+      final program = await context.read<TeacherRepository>().program(subjectId: subjectId);
+      if (!mounted) return;
+      setState(() {
+        _program = program;
+        _topic = null;
+        _branch = null;
+        _groupIds.clear();
+        _preselectGroup();
+        _loadingProgram = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingProgram = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  /// "O'z materialimdan": upload, let the AI find topics, pick one — then the
+  /// program is reloaded so the new topics sit in the picker too.
+  Future<void> _fromMaterial() async {
+    final picked = await Navigator.of(context).push<(ProgramBranch, ProgramTopic)>(
+      MaterialPageRoute(builder: (context) => TeacherMaterialScreen(program: _program)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _branch = picked.$1;
+      _topic = picked.$2;
+      _error = null;
+    });
+    try {
+      final program = await context.read<TeacherRepository>().program(subjectId: _program.subjectId);
+      if (mounted) setState(() => _program = program);
+    } on ApiException {
+      // The topic is already chosen; a stale picker is only cosmetic.
+    }
   }
 
   @override
@@ -108,16 +172,18 @@ class _FormState extends State<_Form> {
       !_busy && _topic != null && _groupIds.isNotEmpty && !widget.setup.quota.isExhausted;
 
   Future<void> _pickTopic() async {
-    final picked = await showModalBottomSheet<(ProgramBranch, ProgramTopic)>(
+    final picked = await showModalBottomSheet<Object>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => _TopicSheet(program: widget.setup.program),
+      builder: (context) => _TopicSheet(program: _program),
     );
-    if (picked == null || !mounted) return;
+    if (!mounted) return;
+    if (picked is _FromMaterial) return _fromMaterial();
+    if (picked is! (ProgramBranch, ProgramTopic)) return;
     setState(() {
       _branch = picked.$1;
       _topic = picked.$2;
@@ -188,21 +254,57 @@ class _FormState extends State<_Form> {
     if (job != null) return _Progress(job: job, onRetry: () => setState(() => _job = null));
 
     final setup = widget.setup;
-    if (setup.program.isEmpty) {
+    // Sections and topics can be added from the picker, and material can be
+    // uploaded, so an empty syllabus is no longer a dead end — only a teacher
+    // with no subject at all is.
+    if (_program.subjectId.isEmpty && _program.branches.isEmpty) {
       return EmptyView(message: s.noProgram, icon: Icons.menu_book_outlined);
     }
+    final groups = _groups;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       children: [
         if (!setup.quota.unlimited) _QuotaBanner(quota: setup.quota),
         const SizedBox(height: 14),
+        if (_program.subjects.length > 1) ...[
+          _Field(
+            label: s.pickSubject,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final subject in _program.subjects)
+                  _SubjectPill(
+                    label: subject.name,
+                    selected: subject.id == _program.subjectId,
+                    onTap: () => _selectSubject(subject.id),
+                  ),
+              ],
+            ),
+          ),
+          if (_loadingProgram)
+            const Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: LinearProgressIndicator(minHeight: 2, color: AppColors.violet),
+            ),
+          const SizedBox(height: 14),
+        ],
         _Field(
           label: s.pickTopic,
           child: _Picker(
             value: _topic == null ? null : '${_branch?.name} · ${_topic!.name}',
             placeholder: s.pickTopic,
-            onTap: _pickTopic,
+            onTap: _loadingProgram ? () {} : _pickTopic,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: GhostButton(
+            label: '+ ${s.fromMaterial}',
+            dense: true,
+            onPressed: _loadingProgram ? null : _fromMaterial,
           ),
         ),
         const SizedBox(height: 14),
@@ -210,7 +312,9 @@ class _FormState extends State<_Form> {
           label: s.pickGroups,
           child: Column(
             children: [
-              for (final group in setup.groups)
+              if (groups.isEmpty)
+                EmptyView(message: s.noGroupsForSubject, icon: Icons.groups_2_outlined),
+              for (final group in groups)
                 _GroupCheck(
                   group: group,
                   checked: _groupIds.contains(group.id),
@@ -729,7 +833,7 @@ class _TopicSheetState extends State<_TopicSheet> {
     try {
       final branch = await context
           .read<TeacherRepository>()
-          .createBranch(name: picked.$1, hint: picked.$2);
+          .createBranch(name: picked.$1, hint: picked.$2, subjectId: widget.program.subjectId);
       if (!mounted) return;
       setState(() {
         _branches = [..._branches, branch];
@@ -794,7 +898,42 @@ class _TopicSheetState extends State<_TopicSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
+            // The teacher's own chapter, handed to the material screen.
+            AppCard(
+              color: AppColors.violetTint,
+              radius: AppShapes.tileRadius,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              onTap: _busy ? null : () => Navigator.of(context).pop(const _FromMaterial()),
+              child: Row(
+                children: [
+                  const Icon(Icons.upload_file_outlined, size: 20, color: AppColors.violet),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.fromMaterial,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.violetDark,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          s.fromMaterialHint,
+                          style: const TextStyle(fontSize: 11.5, height: 1.35, color: AppColors.body),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.violet),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
             for (final branch in _branches) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12, bottom: 6),
@@ -847,7 +986,9 @@ class _TopicSheetState extends State<_TopicSheet> {
                             ),
                           ),
                         ),
-                        if (topic.isCustom)
+                        if (topic.fromMaterial)
+                          const Icon(Icons.description_outlined, size: 16, color: AppColors.violet)
+                        else if (topic.isCustom)
                           const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.violet),
                       ],
                     ),
@@ -855,6 +996,42 @@ class _TopicSheetState extends State<_TopicSheet> {
                 ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// What the topic sheet pops when the teacher chose their own material.
+class _FromMaterial {
+  const _FromMaterial();
+}
+
+class _SubjectPill extends StatelessWidget {
+  const _SubjectPill({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.violet : AppColors.surface,
+      borderRadius: AppShapes.pillRadius,
+      child: InkWell(
+        borderRadius: AppShapes.pillRadius,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 18),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : AppColors.body,
+            ),
+          ),
         ),
       ),
     );

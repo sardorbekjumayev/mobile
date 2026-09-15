@@ -187,6 +187,33 @@ class S {
   String get knowledgeRefresh => _t('knowledge_refresh');
   String get knowledgeAnalyzingNote => _t('knowledge_analyzing_note');
 
+  // My own material, multi-subject teachers, paper tests (titul)
+  String get fromMaterial => _t('from_material');
+  String get fromMaterialHint => _t('from_material_hint');
+  String get materialTitle => _t('material_title');
+  String get materialBranch => _t('material_branch');
+  String get materialFiles => _t('material_files');
+  String get materialPickFile => _t('material_pick_file');
+  String get materialLimit => _t('material_limit');
+  String get materialUpload => _t('material_upload');
+  String get materialReading => _t('material_reading');
+  String get materialReady => _t('material_ready');
+  String get materialFailed => _t('material_failed');
+  String get materialNoText => _t('material_no_text');
+  String get materialBadPhoto => _t('material_bad_photo');
+  String get materialDerive => _t('material_derive');
+  String get materialDeriving => _t('material_deriving');
+  String get materialPickTopic => _t('material_pick_topic');
+  String get materialNoBranch => _t('material_no_branch');
+  String get materialNeedFile => _t('material_need_file');
+  String get noGroupsForSubject => _t('no_groups_for_subject');
+  String get titulTitle => _t('titul_title');
+  String get titulBody => _t('titul_body');
+  String get titulDownload => _t('titul_download');
+  String get scanHint => _t('scan_hint');
+  String get teacherSolutionUpload => _t('teacher_solution_upload');
+  String get teacherSolutionBody => _t('teacher_solution_body');
+
   // Solution sheet (yechim varag'i)
   String get solutionUploadTitle => _t('solution_upload_title');
   String get solutionUploadBody => _t('solution_upload_body');
@@ -742,6 +769,35 @@ class S {
       'solution_work_partial': 'Qisman',
       'solution_work_none': 'Yechim yo\'q',
       'wd_7': 'Ya',
+      'from_material': 'O\'z materialimdan',
+      'from_material_hint':
+          'Konspekt, qo\'llanma sahifasi yoki PDF/DOCX yuklang — AI undan mavzu ajratib, savollarni aynan shu materialdan tuzadi.',
+      'material_title': 'O\'z materialim',
+      'material_branch': 'Bo\'lim',
+      'material_files': 'Fayllar',
+      'material_pick_file': 'PDF / DOCX',
+      'material_limit': 'Bir martada 6 tagacha fayl, har biri 8 MB gacha.',
+      'material_upload': 'Yuklash va o\'qish',
+      'material_reading': 'O\'qilmoqda…',
+      'material_ready': 'O\'qildi',
+      'material_failed': 'Matn ajratilmadi',
+      'material_no_text': 'Bu PDF da matn qatlami yo\'q — bu skan. Rasm sifatida yuklang.',
+      'material_bad_photo': 'Rasmni o\'qib bo\'lmadi — aniqroq rasm yuklang.',
+      'material_derive': 'Mavzularni aniqlash',
+      'material_deriving': 'AI mavzularni ajratyapti…',
+      'material_pick_topic': 'Test uchun mavzuni tanlang',
+      'material_no_branch': 'Avval bo\'lim qo\'shing — mavzular bo\'lim ichiga qo\'shiladi.',
+      'material_need_file': 'Kamida bitta fayl yoki rasm qo\'shing',
+      'no_groups_for_subject': 'Bu fan bo\'yicha guruhingiz yo\'q.',
+      'titul_title': 'Qog\'oz test va titul',
+      'titul_body':
+          'PDF da har bir o\'quvchi uchun savollar va oxirgi sahifada titul (javob varag\'i) bor. Chop eting, o\'quvchilar to\'ldirgach titullarni skanerlang.',
+      'titul_download': 'PDF va titulni yuklab olish',
+      'scan_hint':
+          'To\'ldirilgan titullarni suratga oling — AI o\'qib, har bir o\'quvchini avtomatik baholaydi.',
+      'teacher_solution_upload': 'Yechim varag\'ini yuklash',
+      'teacher_solution_body':
+          'O\'quvchi qog\'ozda ishlagan yechim varag\'ini suratga oling — AI ishlash usulini tahlil qiladi va natija o\'quvchi profiliga qo\'shiladi.',
     },
     'ru': {
       'welcome_title': 'Учись быстрее.\nИграй серьёзнее.',
@@ -1096,6 +1152,34 @@ class S {
       'solution_work_partial': 'Частично',
       'solution_work_none': 'Нет решения',
       'wd_7': 'Вс',
+      'from_material': 'Из моего материала',
+      'from_material_hint':
+          'Загрузите конспект, страницу пособия или PDF/DOCX — ИИ выделит темы и составит вопросы именно по этому материалу.',
+      'material_title': 'Мой материал',
+      'material_branch': 'Раздел',
+      'material_files': 'Файлы',
+      'material_pick_file': 'PDF / DOCX',
+      'material_limit': 'До 6 файлов за раз, каждый до 8 МБ.',
+      'material_upload': 'Загрузить и прочитать',
+      'material_reading': 'Читается…',
+      'material_ready': 'Прочитано',
+      'material_failed': 'Текст не извлечён',
+      'material_no_text': 'В этом PDF нет текстового слоя — это скан. Загрузите как фото.',
+      'material_bad_photo': 'Фото не читается — загрузите более чёткое.',
+      'material_derive': 'Определить темы',
+      'material_deriving': 'ИИ выделяет темы…',
+      'material_pick_topic': 'Выберите тему для теста',
+      'material_no_branch': 'Сначала добавьте раздел — темы добавляются в раздел.',
+      'material_need_file': 'Добавьте хотя бы один файл или фото',
+      'no_groups_for_subject': 'У вас нет групп по этому предмету.',
+      'titul_title': 'Бумажный тест и бланк',
+      'titul_body':
+          'В PDF для каждого ученика — вопросы и на последней странице бланк ответов. Распечатайте, а после заполнения отсканируйте бланки.',
+      'titul_download': 'Скачать PDF и бланк',
+      'scan_hint': 'Сфотографируйте заполненные бланки — ИИ прочитает и оценит каждого ученика.',
+      'teacher_solution_upload': 'Загрузить лист решений',
+      'teacher_solution_body':
+          'Сфотографируйте лист, где ученик решал на бумаге — ИИ разберёт способ решения и добавит результат в профиль ученика.',
     },
     'en': {
       'welcome_title': 'Learn faster.\nPlay harder.',
@@ -1450,6 +1534,34 @@ class S {
       'solution_work_partial': 'Partial',
       'solution_work_none': 'No solution',
       'wd_7': 'Sun',
+      'from_material': 'From my material',
+      'from_material_hint':
+          'Upload notes, a textbook page or a PDF/DOCX — the AI finds the topics and builds questions from this very material.',
+      'material_title': 'My material',
+      'material_branch': 'Section',
+      'material_files': 'Files',
+      'material_pick_file': 'PDF / DOCX',
+      'material_limit': 'Up to 6 files at once, 8 MB each.',
+      'material_upload': 'Upload and read',
+      'material_reading': 'Reading…',
+      'material_ready': 'Read',
+      'material_failed': 'No text extracted',
+      'material_no_text': 'This PDF has no text layer — it is a scan. Upload it as photos.',
+      'material_bad_photo': 'The photo could not be read — upload a sharper one.',
+      'material_derive': 'Find topics',
+      'material_deriving': 'The AI is finding topics…',
+      'material_pick_topic': 'Pick the topic for the test',
+      'material_no_branch': 'Add a section first — topics go inside a section.',
+      'material_need_file': 'Add at least one file or photo',
+      'no_groups_for_subject': 'You have no groups in this subject.',
+      'titul_title': 'Paper test and answer sheet',
+      'titul_body':
+          'The PDF has each student\'s questions and, on the last page, their answer sheet. Print it, and scan the sheets once they are filled in.',
+      'titul_download': 'Download PDF and answer sheets',
+      'scan_hint': 'Photograph the filled-in answer sheets — the AI reads them and grades every student.',
+      'teacher_solution_upload': 'Upload solution sheet',
+      'teacher_solution_body':
+          'Photograph the sheet the student worked on — the AI analyses how they solved it and adds the result to their profile.',
     },
   };
 }

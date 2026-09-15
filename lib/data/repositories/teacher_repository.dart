@@ -68,10 +68,15 @@ class TeacherRepository {
 
   // ── test creation ──────────────────────────────────────────────────
 
-  /// The teacher's own subject, its branches and their topics — one call, where
-  /// the center panel drills down through three.
-  Future<TeacherProgram> program() async =>
-      TeacherProgram.fromJson(asMap(await _api.get('/teacher/program')));
+  /// One of the teacher's subjects, its branches and their topics — one call,
+  /// where the center panel drills down through three. Without [subjectId] the
+  /// first subject answers.
+  Future<TeacherProgram> program({String? subjectId}) async => TeacherProgram.fromJson(asMap(
+        await _api.get(
+          '/teacher/program',
+          query: {if (subjectId != null && subjectId.isNotEmpty) 'subject_id': subjectId},
+        ),
+      ));
 
   /// This month's generation allowance. Read before the form is drawn.
   Future<TeacherQuota> quota() async =>
@@ -125,9 +130,10 @@ class TeacherRepository {
         jobId,
       );
 
-  /// A new section under my own subject — neither panel has this until now.
-  Future<ProgramBranch> createBranch({required String name, String? hint}) async =>
+  /// A new section under one of my subjects.
+  Future<ProgramBranch> createBranch({required String name, String? hint, String? subjectId}) async =>
       ProgramBranch.fromJson(asMap(await _api.post('/teacher/branch/create', body: {
+        if (subjectId != null && subjectId.isNotEmpty) 'subject_id': subjectId,
         'name_i18n': {'uz': name},
         if (hint != null && hint.isNotEmpty) 'hint_i18n': {'uz': hint},
       })));
@@ -143,6 +149,42 @@ class TeacherRepository {
         'name_i18n': {'uz': name},
         if (hint != null && hint.isNotEmpty) 'hint_i18n': {'uz': hint},
       })));
+
+  // ── my own material ────────────────────────────────────────────────
+
+  /// Photos, PDFs or DOCX files of the teacher's own material, in one request.
+  /// Each comes back `reading`; poll [material] until it settles.
+  Future<List<TeacherMaterial>> uploadMaterial(List<String> paths) async => mapList(
+        await _api.uploadFiles('/teacher/material/upload', field: 'files', filePaths: paths),
+        TeacherMaterial.fromJson,
+      );
+
+  Future<TeacherMaterial> material(String id) async =>
+      TeacherMaterial.fromJson(asMap(await _api.get('/teacher/material/$id')));
+
+  /// Up to four topics drawn from the uploads, added under [branchId]. Their
+  /// questions are built from the material's own text.
+  Future<List<ProgramTopic>> topicsFromMaterial({
+    required String branchId,
+    required List<String> materialIds,
+  }) async {
+    final res = asMap(await _api.post('/teacher/topic/from-material', body: {
+      'branch_id': branchId,
+      'material_ids': materialIds,
+    }));
+    return mapList(
+      res['topics'],
+      (j) => ProgramTopic.fromJson({...j, 'is_custom': true, 'from_material': true}),
+    );
+  }
+
+  /// One student's worked solution sheet, photographed by the teacher.
+  Future<void> uploadStudentSolution(String testId, String studentTestId, List<String> paths) =>
+      _api.uploadFiles(
+        '/teacher/test/$testId/student/$studentTestId/solution',
+        field: 'files',
+        filePaths: paths,
+      );
 
   /// The printable test — QR-coded, one sheet per student. Raw bytes, not the
   /// usual JSON envelope.
