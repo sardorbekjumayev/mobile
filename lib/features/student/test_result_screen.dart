@@ -53,7 +53,10 @@ class TestResultScreen extends StatelessWidget {
               const SizedBox(height: 16),
             ],
             if (result.answersHidden)
-              EmptyView(message: s.answersHidden, icon: Icons.visibility_off_outlined)
+              EmptyView(
+                message: s.answersHidden,
+                icon: Icons.visibility_off_outlined,
+              )
             else
               for (final question in result.questions)
                 Padding(
@@ -61,7 +64,10 @@ class TestResultScreen extends StatelessWidget {
                   child: _ResultCard(question: question),
                 ),
             const SizedBox(height: 8),
-            GhostButton(label: s.tests, onPressed: () => context.go('/student/tests')),
+            GhostButton(
+              label: s.tests,
+              onPressed: () => context.go('/student/tests'),
+            ),
           ],
         ),
       ),
@@ -109,20 +115,20 @@ class _ScoreHero extends StatelessWidget {
             children: [
               Text(
                 '${result.score}',
-                style: Theme.of(context)
-                    .textTheme
-                    .displayLarge
+                style: Theme.of(context).textTheme.displayLarge
                     ?.copyWith(color: Colors.white, fontSize: 52),
               ),
               const SizedBox(width: 12),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  passed ? s.passed : s.failed,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.9),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    passed ? s.passed : s.failed,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
                 ),
               ),
@@ -131,7 +137,10 @@ class _ScoreHero extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${result.correctCount}/${result.total} ${s.correctAnswers}',
-            style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.86)),
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Colors.white.withValues(alpha: 0.86),
+            ),
           ),
         ],
       ),
@@ -166,7 +175,11 @@ class _ResultCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   question.text,
-                  style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.ink),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: AppColors.ink,
+                  ),
                 ),
               ),
             ],
@@ -217,7 +230,11 @@ class _ResultCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     question.explanation!,
-                    style: const TextStyle(fontSize: 12.5, height: 1.5, color: AppColors.body),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.5,
+                      color: AppColors.body,
+                    ),
                   ),
                 ],
               ),
@@ -252,7 +269,13 @@ class _DragAndDropResult extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(BuildContext context, S s, DragItems drag, List<int> given, int i) {
+  Widget _buildRow(
+    BuildContext context,
+    S s,
+    DragItems drag,
+    List<int> given,
+    int i,
+  ) {
     final chosen = i < given.length ? given[i] : null;
     final correctTarget = i < drag.correct.length ? drag.correct[i] : null;
     final isCorrect = chosen != null && chosen == correctTarget;
@@ -292,12 +315,18 @@ class _DragAndDropResult extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   label(chosen),
-                  style: TextStyle(fontSize: 12, color: isCorrect ? AppColors.green : AppColors.clay),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isCorrect ? AppColors.green : AppColors.clay,
+                  ),
                 ),
                 if (!isCorrect)
                   Text(
                     label(correctTarget),
-                    style: const TextStyle(fontSize: 12, color: AppColors.green),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.green,
+                    ),
                   ),
               ],
             ),
@@ -332,7 +361,10 @@ class _OptionLine extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(color: background, borderRadius: AppShapes.tileRadius),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppShapes.tileRadius,
+      ),
       child: Row(
         children: [
           Icon(
@@ -349,7 +381,9 @@ class _OptionLine extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 color: color,
-                fontWeight: isCorrect || isChosen ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: isCorrect || isChosen
+                    ? FontWeight.w600
+                    : FontWeight.w400,
               ),
             ),
           ),

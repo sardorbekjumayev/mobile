@@ -295,38 +295,45 @@ class _ParticipantRow extends StatelessWidget {
                       DateFormat('d MMM, HH:mm').format(student.submittedAt!),
                       style: const TextStyle(fontSize: 11, color: AppColors.faint),
                     ),
-                  if (showSolution) ...[
-                    const SizedBox(height: 5),
-                    SolutionStateChip(state: student.solutionState),
-                  ],
+                  const SizedBox(height: 5),
+                  // Chips under the name rather than beside it: on a 390px
+                  // phone a score, a sheet state and two buttons in one row
+                  // leave the name no room at all.
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 5,
+                    children: [
+                      // A score replaces the state chip once there is one — an
+                      // unfinished test has no score, and a zero would read as
+                      // a failed one.
+                      if (student.score != null)
+                        StatusChip(
+                          label: '${student.score}',
+                          background: student.score! < 60 ? AppColors.clayTint : AppColors.greenTint,
+                          foreground: student.score! < 60 ? AppColors.clay : AppColors.green,
+                        )
+                      else
+                        StatusChip(label: label, background: background, foreground: foreground),
+                      if (showSolution) SolutionStateChip(state: student.solutionState),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            // A score replaces the state chip once there is one — an unfinished
-            // test has no score, and a zero would read as a failed one.
-            if (student.score != null)
-              StatusChip(
-                label: '${student.score}',
-                background: student.score! < 60 ? AppColors.clayTint : AppColors.greenTint,
-                foreground: student.score! < 60 ? AppColors.clay : AppColors.green,
-              )
-            else
-              StatusChip(label: label, background: background, foreground: foreground),
             IconButton(
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.add_a_photo_outlined, size: 19, color: AppColors.violet),
               tooltip: s.teacherSolutionUpload,
               onPressed: () => _uploadSolution(context),
             ),
-            if (student.state == TestState.submitted) ...[
-              const SizedBox(width: 4),
+            if (student.state == TestState.submitted)
               IconButton(
+                visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.fact_check_outlined, size: 19, color: AppColors.faint),
                 tooltip: S.of(context).reviewAnswers,
                 onPressed: () => context
                     .push('/teacher/test/$testId/student/${student.studentTestId}/review'),
               ),
-            ],
           ],
         ),
       ),

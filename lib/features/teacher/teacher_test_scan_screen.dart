@@ -234,15 +234,22 @@ class _ScanRow extends StatelessWidget {
                       '${student!.score}',
                       style: const TextStyle(fontSize: 11.5, color: AppColors.faint),
                     ),
+                  const SizedBox(height: 8),
+                  // Below the name, wrapping: the unmatched chip and its
+                  // button are wider than a phone row on their own.
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      StatusChip(label: label, background: background, foreground: foreground),
+                      if (scan.state == 'unmatched')
+                        GhostButton(label: s.assignToStudent, dense: true, onPressed: onAssign),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            StatusChip(label: label, background: background, foreground: foreground),
-            if (scan.state == 'unmatched') ...[
-              const SizedBox(width: 8),
-              GhostButton(label: s.assignToStudent, dense: true, onPressed: onAssign),
-            ],
           ],
         ),
       ),

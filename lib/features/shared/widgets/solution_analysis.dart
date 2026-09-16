@@ -61,7 +61,11 @@ class SolutionAnalysisSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(s.solutionAnalysis, trailing: SolutionStateChip(state: sheet?.state)),
+          // The state under the title, not beside it: "O'qib bo'lmadi — qayta
+          // yuklang" is longer than the room a phone leaves next to it.
+          SectionTitle(s.solutionAnalysis),
+          const SizedBox(height: 8),
+          SolutionStateChip(state: sheet?.state),
           if (sheet != null && sheet.state.isPending) ...[
             const SizedBox(height: 12),
             Text(
