@@ -26,13 +26,14 @@ abstract class TokenStore {
   Future<void> clear();
 }
 
-/// Keychain on iOS, EncryptedSharedPreferences on Android.
+/// Keychain on iOS, AES-GCM behind the Android keystore on Android.
+///
+/// The `encryptedSharedPreferences: true` flag is gone in
+/// flutter_secure_storage 11: encryption is no longer opt-in, it is the only
+/// mode, so the default options are the ones that flag used to select.
 class SecureTokenStore implements TokenStore {
   SecureTokenStore([FlutterSecureStorage? storage])
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+      : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -40,17 +41,31 @@ class SecureTokenStore implements TokenStore {
   static const _kRefresh = 'stepix.refresh_token';
   static const _kExpires = 'stepix.expires_at';
 
+  /// Unreadable storage means "signed out", never a crash.
+  ///
+  /// The platform can refuse a read for reasons that have nothing to do with
+  /// this app's logic: a keystore entry invalidated by a screen-lock change, a
+  /// restored device backup, or — the case that brought this in — tokens
+  /// written by an older encryption backend that the current one cannot open.
+  /// Every one of those should drop the user on the login screen, not hold the
+  /// splash screen forever, so the unreadable pair is wiped and treated as
+  /// absent.
   @override
   Future<AuthTokens?> read() async {
-    final access = await _storage.read(key: _kAccess);
-    final refresh = await _storage.read(key: _kRefresh);
-    if (access == null || refresh == null) return null;
-    final expires = await _storage.read(key: _kExpires);
-    return AuthTokens(
-      access: access,
-      refresh: refresh,
-      expiresAt: expires == null ? null : DateTime.tryParse(expires),
-    );
+    try {
+      final access = await _storage.read(key: _kAccess);
+      final refresh = await _storage.read(key: _kRefresh);
+      if (access == null || refresh == null) return null;
+      final expires = await _storage.read(key: _kExpires);
+      return AuthTokens(
+        access: access,
+        refresh: refresh,
+        expiresAt: expires == null ? null : DateTime.tryParse(expires),
+      );
+    } catch (_) {
+      await clear();
+      return null;
+    }
   }
 
   @override
@@ -63,11 +78,16 @@ class SecureTokenStore implements TokenStore {
     );
   }
 
+  /// Best-effort: a delete that throws must not stop a sign-out.
   @override
   Future<void> clear() async {
-    await _storage.delete(key: _kAccess);
-    await _storage.delete(key: _kRefresh);
-    await _storage.delete(key: _kExpires);
+    for (final key in const [_kAccess, _kRefresh, _kExpires]) {
+      try {
+        await _storage.delete(key: key);
+      } catch (_) {
+        /* nothing left to do — the next write overwrites it anyway */
+      }
+    }
   }
 }
 

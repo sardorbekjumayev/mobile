@@ -176,7 +176,7 @@ class _PaperCardState extends State<_PaperCard> {
       final file = File('${dir.path}/${widget.testId}.pdf');
       await file.writeAsBytes(bytes);
       if (!mounted) return;
-      await Share.shareXFiles([XFile(file.path)]);
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     } on ApiException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } finally {

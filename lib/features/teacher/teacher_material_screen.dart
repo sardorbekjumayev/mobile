@@ -92,14 +92,15 @@ class _TeacherMaterialScreenState extends State<TeacherMaterialScreen> {
 
   Future<void> _fromFiles() async {
     try {
-      final result = await FilePicker.pickFiles(
-        allowMultiple: true,
+      // file_picker 13 answers with a list — empty when the user backed out —
+      // and picks several by default, so there is no `allowMultiple` any more.
+      final picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['pdf', 'docx'],
       );
-      if (result == null || !mounted) return;
+      if (picked.isEmpty || !mounted) return;
       setState(() => _files.addAll(
-            result.files
+            picked
                 .where((f) => f.path != null)
                 .take(_left)
                 .map((f) => _Pending(f.path!, f.name)),

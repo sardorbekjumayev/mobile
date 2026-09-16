@@ -662,7 +662,7 @@ class _ProgressState extends State<_Progress> {
       final file = File('${dir.path}/${widget.job.testId}.pdf');
       await file.writeAsBytes(bytes);
       if (!mounted) return;
-      await Share.shareXFiles([XFile(file.path)]);
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
