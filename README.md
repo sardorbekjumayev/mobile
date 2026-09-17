@@ -12,7 +12,7 @@ flutter run
 flutter build apk --release
 ```
 
-`STEPIX_API_BASE_URL` berilmasa **`https://api.169-58-198-20.sslip.io/v1`**
+`STEPIX_API_BASE_URL` berilmasa **`https://api.stepix.uz/v1`**
 ishlatiladi — nginx orqasidagi Mobile API (`backend`, `MOBILE_PORT=3003`,
 TLS Let's Encrypt). Ya'ni telefon hech qanday sozlamasiz ishlaydi.
 
@@ -29,7 +29,7 @@ HTTPS bilan gaplashadi, istisno faqat `10.0.2.2` va `localhost` uchun.
 
 | dart-define | Nima uchun |
 |---|---|
-| `STEPIX_API_BASE_URL` | API manzili. Sukut bo'yicha `https://api.169-58-198-20.sslip.io/v1` |
+| `STEPIX_API_BASE_URL` | API manzili. Sukut bo'yicha `https://api.stepix.uz/v1` |
 | `STEPIX_APP_VERSION` | `X-App-Version` va `GET /settings?version=`. Server shu asosda `force_update` qaytaradi |
 
 ### Tarmoq bo'yicha nima qayerda

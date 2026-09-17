@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// ```sh
 /// flutter build apk --release \
-///   --dart-define=STEPIX_API_BASE_URL=https://api.169-58-198-20.sslip.io/v1
+///   --dart-define=STEPIX_API_BASE_URL=https://api.stepix.uz/v1
 /// ```
 class AppConfig {
   const AppConfig._();
@@ -29,7 +29,7 @@ class AppConfig {
   /// A LAN address over plain HTTP also needs its own `<domain>` entry in
   /// `android/app/src/main/res/xml/network_security_config.xml`; only the
   /// emulator hosts are permitted there out of the box.
-  static const _defaultBaseUrl = 'https://api.169-58-198-20.sslip.io/v1';
+  static const _defaultBaseUrl = 'https://api.stepix.uz/v1';
 
   static String get baseUrl {
     const override = String.fromEnvironment('STEPIX_API_BASE_URL');
