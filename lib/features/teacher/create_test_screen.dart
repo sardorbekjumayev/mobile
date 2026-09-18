@@ -402,16 +402,19 @@ class _FormState extends State<_Form> {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Column(
               children: [
+                // No `image_based` here: that type needs a picture attached by
+                // hand before the test can be assigned, and the app has no way
+                // to attach one — a teacher who ticked it got a test they could
+                // not hand out. AI-drawn pictures are the "with images" switch
+                // below. The web panel dropped the same duplicate earlier.
                 for (final kind in const [
                   QuestionKind.singleChoice,
                   QuestionKind.multipleChoice,
-                  QuestionKind.imageBased,
                   QuestionKind.dragAndDrop,
                 ])
                   _QuestionTypeCheck(
                     label: switch (kind) {
                       QuestionKind.multipleChoice => s.questionTypeMultipleChoice,
-                      QuestionKind.imageBased => s.questionTypeImageBased,
                       QuestionKind.dragAndDrop => s.questionTypeDragAndDrop,
                       _ => s.questionTypeSingleChoice,
                     },
@@ -567,8 +570,11 @@ class _FormState extends State<_Form> {
                   value: _flags.allowCalculator,
                   onChanged: (v) => setState(() => _flags = _flags.copyWith(allowCalculator: v)),
                 ),
+                // Every picture is a paid call, so the hint says what it does
+                // and how many, rather than leaving it to be discovered.
                 _FlagSwitch(
                   label: s.withImages,
+                  hint: s.withImagesHint,
                   value: _flags.withImages,
                   onChanged: (v) => setState(() => _flags = _flags.copyWith(withImages: v)),
                   last: true,
@@ -1270,10 +1276,12 @@ class _FlagSwitch extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    this.hint,
     this.last = false,
   });
 
   final String label;
+  final String? hint;
   final bool value;
   final ValueChanged<bool> onChanged;
   final bool last;
@@ -1288,9 +1296,18 @@ class _FlagSwitch extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: AppColors.ink),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: AppColors.ink),
+                ),
+                if (hint != null) ...[
+                  const SizedBox(height: 2),
+                  Text(hint!, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, height: 1.35)),
+                ],
+              ],
             ),
           ),
           Switch.adaptive(value: value, activeThumbColor: AppColors.violet, onChanged: onChanged),

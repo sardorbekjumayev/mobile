@@ -70,6 +70,7 @@ class S {
   String get showExplanation => _t('show_explanation');
   String get allowCalculator => _t('allow_calculator');
   String get withImages => _t('with_images');
+  String get withImagesHint => _t('with_images_hint');
   String get viewVariants => _t('view_variants');
   String get commonPaper => _t('common_paper');
   String get generate => _t('generate');
@@ -467,6 +468,7 @@ class S {
       'show_explanation': 'Tushuntirish bilan ko\'rsatish',
       'allow_calculator': 'Kalkulyatorga ruxsat berish',
       'with_images': 'Rasmli savollar (AI chizadi)',
+      'with_images_hint': "Kerak bo'lgan savollarga AI rasm chizadi (bitta testga 12 tagacha)",
       'view_variants': 'Variantlarni ko\'rish',
       'common_paper': 'Umumiy variant',
       'generate': 'Testni yaratish',
@@ -850,6 +852,7 @@ class S {
       'show_explanation': 'Показывать с объяснением',
       'allow_calculator': 'Разрешить калькулятор',
       'with_images': 'Вопросы с картинками (рисует ИИ)',
+      'with_images_hint': 'ИИ нарисует картинки к вопросам, где они нужны (до 12 на тест)',
       'view_variants': 'Посмотреть варианты',
       'common_paper': 'Общий вариант',
       'generate': 'Создать тест',
@@ -1232,6 +1235,7 @@ class S {
       'show_explanation': 'Show with an explanation',
       'allow_calculator': 'Allow a calculator',
       'with_images': 'Illustrated questions (AI draws them)',
+      'with_images_hint': 'AI draws a picture for the questions that need one (up to 12 per test)',
       'view_variants': 'View variants',
       'common_paper': 'Common variant',
       'generate': 'Generate the test',

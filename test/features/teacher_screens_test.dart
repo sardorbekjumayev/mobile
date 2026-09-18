@@ -378,6 +378,18 @@ void main() {
       expect(find.text('Mexanika · Nyuton qonunlari'), findsOneWidget);
     });
 
+    testWidgets('pictures are offered once — as the AI-drawn switch, not as a question type', (tester) async {
+      await pumpApp(tester, api: createApi(), tokens: signedInTokens);
+      await goTo(tester, '/teacher/create-test');
+
+      // Only the types the app can hand out; "Rasmli" needed a hand-attached file.
+      await tester.scrollUntilVisible(find.text("Bitta to'g'ri javob"), 300);
+      expect(find.text('Rasmli'), findsNothing);
+      await tester.scrollUntilVisible(find.text('Rasmli savollar (AI chizadi)'), 300);
+      expect(find.text("Kerak bo'lgan savollarga AI rasm chizadi (bitta testga 12 tagacha)"), findsOneWidget);
+      expect(find.text('Rasmli'), findsNothing);
+    });
+
     testWidgets('a single-subject teacher sees no subject picker', (tester) async {
       final api = FakeApiClient({
         ...teacherStubs(),
