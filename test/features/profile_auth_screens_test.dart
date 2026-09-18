@@ -41,6 +41,31 @@ void main() {
     expect(find.text('Профиль'), findsWidgets);
   });
 
+  // The dialog used to dispose its controller while still animating out, which
+  // broke the frame on Save and the rename never reached the server.
+  testWidgets('renaming saves the new name and shows it', (tester) async {
+    final renamed = {...(identityJson()['user'] as Map<String, dynamic>), 'full_name': 'Vali Aliyev'};
+    final api = FakeApiClient({
+      ...profileStubs(),
+      'PUT /profile': {'user': renamed},
+    });
+    await pumpApp(tester, api: api, tokens: signedInTokens);
+    await tester.tap(find.text('Profil'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.edit_outlined));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '  Vali Aliyev ');
+    // What the server answers once the rename has landed.
+    api.responses['GET /profile'] = {'user': renamed, 'center_name': 'Stepix Center', 'tests_taken': 3};
+    await tester.tap(find.text('Saqlash'));
+    await tester.pumpAndSettle();
+
+    expect(api.bodies['PUT /profile'], {'full_name': 'Vali Aliyev'});
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('Vali Aliyev'), findsOneWidget);
+  });
+
   testWidgets('a failed language save rolls back', (tester) async {
     final api = FakeApiClient({
       ...profileStubs(),

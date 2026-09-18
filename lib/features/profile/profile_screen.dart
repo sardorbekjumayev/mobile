@@ -171,38 +171,10 @@ class _ProfileBody extends StatelessWidget {
   /// belong to the center — letting a student change the number they log in
   /// with is an account-transfer feature nobody asked for.
   Future<void> _rename(BuildContext context, AppUser user) async {
-    final s = S.of(context);
-    final controller = TextEditingController(text: user.fullName);
     final name = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(borderRadius: AppShapes.tileRadius),
-        title: Text(s.fullName, style: Theme.of(context).textTheme.titleMedium),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.surface2,
-            border: const OutlineInputBorder(
-              borderRadius: AppShapes.fieldRadius,
-              borderSide: BorderSide.none,
-            ),
-            hintText: s.fullName,
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => context.pop(), child: Text(s.cancel)),
-          TextButton(
-            onPressed: () => context.pop(controller.text.trim()),
-            child: Text(s.save),
-          ),
-        ],
-      ),
+      builder: (context) => _RenameDialog(initial: user.fullName),
     );
-    controller.dispose();
 
     if (name == null || name.isEmpty || name == user.fullName) return;
     if (!context.mounted) return;
@@ -216,6 +188,60 @@ class _ProfileBody extends StatelessWidget {
     } on ApiException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     }
+  }
+}
+
+/// The name field owns its controller. `showDialog` completes as soon as the
+/// dialog is popped, while the TextField is still on screen for the exit
+/// animation — disposing the controller at that point broke the frame and the
+/// save never reached the server.
+class _RenameDialog extends StatefulWidget {
+  const _RenameDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_RenameDialog> createState() => _RenameDialogState();
+}
+
+class _RenameDialogState extends State<_RenameDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: AppShapes.tileRadius),
+      title: Text(s.fullName, style: Theme.of(context).textTheme.titleMedium),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: AppColors.surface2,
+          border: const OutlineInputBorder(
+            borderRadius: AppShapes.fieldRadius,
+            borderSide: BorderSide.none,
+          ),
+          hintText: s.fullName,
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => context.pop(), child: Text(s.cancel)),
+        TextButton(
+          onPressed: () => context.pop(_controller.text.trim()),
+          child: Text(s.save),
+        ),
+      ],
+    );
   }
 }
 
