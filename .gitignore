@@ -51,3 +51,7 @@ app.*.map.json
 # the expected/actual/diff triple here on a mismatch and it is regenerated
 # every run.
 test/goldens/failures/
+
+# Firebase config (never commit)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
