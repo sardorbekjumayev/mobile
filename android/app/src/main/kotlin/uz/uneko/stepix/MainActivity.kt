@@ -1,4 +1,4 @@
-package uz.stepix.app
+package uz.uneko.stepix
 
 import io.flutter.embedding.android.FlutterActivity
 

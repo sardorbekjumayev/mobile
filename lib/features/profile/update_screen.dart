@@ -16,7 +16,7 @@ class UpdateScreen extends StatelessWidget {
   const UpdateScreen({super.key});
 
   static const _androidStore =
-      'https://play.google.com/store/apps/details?id=uz.stepix.app';
+      'https://play.google.com/store/apps/details?id=uz.uneko.stepix';
   static const _iosStore = 'https://apps.apple.com/app/stepix/id0000000000';
 
   @override
